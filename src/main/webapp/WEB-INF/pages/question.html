@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Вопрос</title>
+    <link rel="stylesheet" href="../../css/main.css" th:href="@{/css/main.css}">
+</head>
+<body>
+
+<div id="header">
+
+</div>
+
+<div id="content_container">
+    <div id="content" th:fragment="content">
+        <input type="hidden" th:value="${question.getText()}" value="Вопрос" id="title">
+        <a href="index.html" th:href="@{/}" id="question_back">Назад к списку вопросов</a>
+        <h3 th:text="${question.getText()}">Текст вопроса</h3>
+        <div id="chat_wr">
+            <div id="chat_container">
+                <div id="chat" th:remove="body">
+                    <table class="message">
+                        <tr>
+                            <td>
+                                <span class="username">Dazar:</span>
+                                <span class="text">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</span>
+                            </td>
+                            <td class="time">14:07:23</td>
+                        </tr>
+                    </table>
+                    <table class="message">
+                        <tr>
+                            <td>
+                                <span class="username">Dazar:</span>
+                                <span class="text">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</span>
+                            </td>
+                            <td class="time">14:07:23</td>
+                        </tr>
+                    </table>
+                    <table class="message">
+                        <tr>
+                            <td>
+                                <span class="username">Dazar:</span>
+                                <span class="text">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</span>
+                            </td>
+                            <td class="time">14:07:23</td>
+                        </tr>
+                    </table>
+                    <table class="message">
+                        <tr>
+                            <td>
+                                <span class="username">Dazar:</span>
+                                <span class="text">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</span>
+                            </td>
+                            <td class="time">14:07:23</td>
+                        </tr>
+                    </table>
+                    <table class="message">
+                        <tr>
+                            <td class="name_text">
+                                <span class="username">Dazar:</span>
+                                <span class="text">Loremipsumdolorsitamet,consecteturadipiscingelit,seddoeiusmodtemporincididuntutlaboreetdoloremagnaaliqua.Utenimadminimveniam,quisnostrudexercitationullamcolaborisnisiutaliquipexeacommodoconsequat.Duisauteiruredolorinreprehenderitinvoluptatevelitessecillumdoloreeufugiatnullapariatur.Excepteursintoccaecatcupidatatnonproident,suntinculpaquiofficiadeseruntmollitanimidestlaborum.</span>
+                            </td>
+                            <td class="time">14:07:23</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <input type="text" placeholder="Чтобы отправлять сообщения необходимо авторизироваться"
+                   onkeypress="if(event.keyCode==13){sendMessage();}" id="message_input" disabled>
+            <input type="button" value="Отправить" onclick="sendMessage();" id="send_message_button" disabled>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

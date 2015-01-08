@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+        >
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Логин</title>
+    <link rel="stylesheet" href="../../css/main.css" th:href="@{/css/main.css}">
+</head>
+<body>
+<div id="content_container">
+    <div id="content" th:fragment="content">
+        <input type="hidden" value="Вход в систему" id="title">
+        <form th:action="@{/login}" method="POST">
+            <table id="login_table">
+                <tr>
+                    <td colspan="2"><h3>Вход</h3></td>
+                </tr>
+                <tr th:if="${error}">
+                    <td id="error_message" colspan="2">Неверный email и/или пароль</td>
+                </tr>
+                <tr th:if="${registered}">
+                    <td id="registered_message" colspan="2">Вы успешно зарегистрированы</td>
+                </tr>
+                <tr>
+                    <td><span>Email</span></td>
+                    <td align="right"><input type="text" id="username" name="username" autofocus></td>
+                </tr>
+                <tr>
+                    <td><span>Пароль</span></td>
+                    <td align="right"><input type="password" id="password" name="password"></td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <a href="register.html" th:href="@{/register}">Зарегистрироваться</a>
+                        <input type="submit" value="Вход">
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
+</body>
+</html>

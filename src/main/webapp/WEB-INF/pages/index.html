@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+        >
+<head>
+    <title>Вопрос-Ответ 2.0</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="../../css/main.css" th:href="@{/css/main.css}">
+</head>
+<body>
+
+<div id="header">
+
+</div>
+
+<div id="content_container">
+    <div id="content" th:fragment="content">
+        <input type="hidden" value="Вопрос-Ответ 2.0" id="title">
+
+        <h3>Вопросы:</h3>
+
+        <div id="questions">
+            <div class="item" th:each="q : ${questions}">
+                <a href="question.html" th:href="@{/question(id=${q.getId()})}" th:text="${q.getText()}">Текст вопроса</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
