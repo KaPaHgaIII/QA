@@ -3,6 +3,13 @@ var stompConnected = false;
 var subscribedChatId = null; //current chat
 var chatSubscription = null;
 
+var chatMessages = [];
+var lastMessage = -1;
+var firstShownMessage = Infinity;
+var lastShownMessage = -1;
+var userScrolledChat = false; // defines if we should scroll when new message coming
+var programScroll = false; // true - program scrolling, false - user scrolling
+
 $(function () {
     var token = $("meta[name='_csrf']").attr("content");
     var header = $("meta[name='_csrf_header']").attr("content");
@@ -106,12 +113,135 @@ function setUpChat(url) {
     $.ajax({
         type: "GET",
         url: "/loadChatMessages/" + chatId,
-        success: function (message) {
-            showMessages(message);
+        success: function (msgs) {
+            addMessages(msgs);
+            showMessages();
+        }
+    });
+
+    var chatContainer = $('#chat_container');
+
+    chatContainer.scroll(function () {
+
+        if (!programScroll) {
+            userScrolledChat = ($("#chat").height() - chatContainer.height()) > chatContainer.scrollTop();
+            //alert(userScrolledChat);
+        }
+
+        if (chatContainer.scrollTop() < 50) {
+
+            if (firstShownMessage != 0) {
+                showMessages(1);
+                //alert("I should show you previous messages")
+            }
         }
     });
 }
 
+function addMessages(msgs) {
+    for (var i = 0; i < msgs.length; i++) {
+        addMessage(msgs[i]);
+    }
+}
+
+function addMessage(message) {
+    lastMessage = Math.max(lastMessage, parseInt(message.number));
+    if (chatMessages[message.number] == undefined) {
+        chatMessages[message.number] = message;
+    }
+}
+
+function showMessages(action) {
+    var chat = $("#chat");
+    var chatContainer = $("#chat_container");
+    if (action) {
+        if (action == 1) { // show previous 25
+            programScroll = true;
+            var scrolledBottom = chat.height() - chatContainer.scrollTop();
+            var i = firstShownMessage - 1;
+            var shown = 0;
+            while (i > -1 && shown < 26) {
+                if (chatMessages[i] != undefined) {
+                    showMessage(chatMessages[i]);
+                    shown++;
+                }
+                i--;
+            }
+            chatContainer.scrollTop(chat.height() - scrolledBottom);
+            programScroll = false;
+        }
+    }
+    if (lastShownMessage != -1) { // for new incoming messages
+        for (var j = lastShownMessage; j <= lastMessage; j++) {
+            if (chatMessages[j] != undefined) {
+                showMessage(chatMessages[j]);
+            }
+        }
+        if(!userScrolledChat){
+            programScroll = true;
+            chatContainer.scrollTop(chat.height() + 99999);
+            programScroll = false;
+        }
+    }
+    if (firstShownMessage == Infinity) { // initial (last 25 messages)
+        var i = lastMessage;
+        var shown = 0;
+        while (i > -1 && shown < 26) {
+            if (chatMessages[i] != undefined) {
+                showMessage(chatMessages[i]);
+                shown++;
+            }
+            i--;
+        }
+        chatContainer.scrollTop(chat.height() + 99999);
+    }
+}
+
+function showMessage(m) {
+    if (!m.shown) {
+
+        m.shown = true;
+        var date = new Date(m.time);
+
+        var html = [];
+        var i = 0;
+        html[i++] = "<table class='message' number='";
+        html[i++] = m.number;
+        html[i++] = "'><tr><td class='name_text'><span class='username'>";
+        html[i++] = m.username;
+        html[i++] = ": </span><span class='text'>";
+        html[i++] = m.text;
+        html[i++] = "</span></td><td class='time'>";
+        html[i++] = formatDate(date);
+        html[i++] = "</td></tr></table>";
+
+        var message = html.join("");
+
+        if (lastShownMessage == -1) {
+            $("#chat").append(message);
+        } else {
+            var diff = 1;
+            var n;
+            while (true) {
+                n = m.number + diff;
+                if (chatMessages[n] && chatMessages[n].shown) {
+                    $(".message[number='" + n + "']").before(message);
+                    break;
+                }
+                n = m.number - diff;
+                if (chatMessages[n] && chatMessages[n].shown) {
+                    $(".message[number='" + n + "']").after(message);
+                    break;
+                }
+                diff++;
+            }
+        }
+
+        firstShownMessage = Math.min(m.number, firstShownMessage);
+        lastShownMessage = Math.max(m.number, lastShownMessage);
+
+    }
+}
 
 function connectWebSocket() {
     var socket = new SockJS('/socket');
@@ -125,7 +255,8 @@ function connectWebSocket() {
 function subscribeChat(chatId) {
     if (stompConnected) {
         chatSubscription = stompClient.subscribe("/chat/" + chatId, function (message) {
-            showMessages(JSON.parse(message.body));
+            addMessages(JSON.parse(message.body));
+            showMessages();
         });
         subscribedChatId = chatId;
 
@@ -154,33 +285,6 @@ function sendMessage() {
         messageInput.val("");
         messageInput.focus();
     }
-}
-
-function showMessages(msgs) {
-    for (var i = 0; i < msgs.length; i++) {
-        showMessage(msgs[i]);
-    }
-}
-
-function showMessage(m) {
-    var date = new Date(m.time);
-
-    var username = $("<span class='username'>" + m.username + ": </span>");
-    var text = $("<span class='text'>" + m.text + "</span>");
-    var nameText = $("<td class='name_text'></td>");
-    nameText.append(username);
-    nameText.append(text);
-    var time = $("<td class='time'>" + formatDate(date) + "</td>");
-    var tr = $("<tr></tr>");
-    tr.append(nameText);
-    tr.append(time);
-    var message = $("<table class='message'></table>");
-    message.append(tr);
-
-    var chat = $("#chat");
-    chat.append(message);
-
-    $('#chat_container').scrollTop(chat.height());
 }
 
 function formatDate(date) {
