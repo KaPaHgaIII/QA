@@ -63,4 +63,8 @@ public class ChatMessage {
     public void setQuestion(Question question) {
         this.question = question;
     }
+
+    public Integer getNumber() {
+        return number;
+    }
 }
