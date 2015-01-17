@@ -51,7 +51,9 @@ input[type='button'], input[type='submit'] {
     background-color: #FFFFFF;
     box-shadow: 1px 1px 1px 1px #777777;
     min-width: 80px;
-    font-size: 20px;
+    font-size: 14px;
+    line-height: 26px;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 input[type='button']:hover, input[type='submit']:hover {
@@ -125,15 +127,14 @@ input[type='button']:active, input[type='submit']:active {
 
 #chat_wr #message_input {
     margin-top: 10px;
-    width: 477px;
+    width: 512px;
 }
 
 #chat_wr #send_message_button {
-    line-height: 26px;
     vertical-align: top;
     position: relative;
     top: 10px;
-    width: 115px;
+    width: 80px;
 }
 
 #chat_wr #chat .message {
@@ -142,9 +143,42 @@ input[type='button']:active, input[type='submit']:active {
     margin-top: 3px;
 }
 
+#chat_wr #chat .message .votes {
+    white-space: nowrap;
+    vertical-align: top;
+    width: 36px;
+}
+
+#chat_wr #chat .message .votes .vote_up {
+    display: inline-block;
+    height: 16px;
+    width: 16px;
+    background: url('images/vote_up.png') no-repeat 0 0;
+    vertical-align: bottom;
+    cursor: pointer;
+}
+
+#chat_wr #chat .message .votes .vote_up:hover, #chat_wr #chat .message .votes .vote_up.voted {
+    background-position: -16px 0;
+}
+
+#chat_wr #chat .message .votes .vote_up.disabled {
+    background: white !important;
+    cursor: default !important;
+}
+
+#chat_wr #chat .message .votes .votes_count {
+    line-height: 16px;
+    margin: 0 5px 0 0;
+    min-width: 15px;
+    display: inline-block;
+    text-align: center;
+}
+
 #chat_wr #chat .message .name_text {
     word-break: break-all;
     overflow-wrap: break-word;
+    line-height: 16px;
 }
 
 #chat_wr #chat .message .username {

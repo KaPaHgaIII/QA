@@ -1,14 +1,5 @@
 var stompClient = null;
 var stompConnected = false;
-var subscribedChatId = null; //current chat
-var chatSubscription = null;
-
-var chatMessages = [];
-var lastMessage = -1;
-var firstShownMessage = Infinity;
-var lastShownMessage = -1;
-var userScrolledChat = false; // defines if we should scroll when new message coming
-var programScroll = false; // true - program scrolling, false - user scrolling
 
 $(function () {
     var token = $("meta[name='_csrf']").attr("content");
@@ -68,9 +59,9 @@ function loadPage(url, data) {
 
     //websocket maintenance
     if (url.match("^/question")) {
-        setUpChat(url)
-    } else if (subscribedChatId) {
-        unsubscribeChat(subscribedChatId);
+        chat.setUp(url)
+    } else if (chat.chatId) {
+        chat.finalize();
     }
 }
 
@@ -94,198 +85,292 @@ function updateLinks() {
     });
 }
 
-function setUpChat(url) {
-    var regExp = /^\/question\?id=(.*)/;
-    var chatId = regExp.exec(url)[1];
-
-    subscribeChat(chatId);
-
-    if (loggedIn) {
-        var messageInput = $("#message_input");
-        messageInput.prop("disabled", false);
-        messageInput.attr("placeholder", "Введите сообщение...");
-        messageInput.focus();
-
-        var sendButton = $("#send_message_button");
-        sendButton.prop("disabled", false);
-    }
-
-    $.ajax({
-        type: "GET",
-        url: "/loadChatMessages/" + chatId,
-        success: function (msgs) {
-            addMessages(msgs);
-            showMessages();
-        }
-    });
-
-    var chatContainer = $('#chat_container');
-
-    chatContainer.scroll(function () {
-
-        if (!programScroll) {
-            userScrolledChat = ($("#chat").height() - chatContainer.height()) > chatContainer.scrollTop();
-            //alert(userScrolledChat);
-        }
-
-        if (chatContainer.scrollTop() < 50) {
-
-            if (firstShownMessage != 0) {
-                showMessages(1);
-                //alert("I should show you previous messages")
-            }
-        }
-    });
-}
-
-function addMessages(msgs) {
-    for (var i = 0; i < msgs.length; i++) {
-        addMessage(msgs[i]);
-    }
-}
-
-function addMessage(message) {
-    lastMessage = Math.max(lastMessage, parseInt(message.number));
-    if (chatMessages[message.number] == undefined) {
-        chatMessages[message.number] = message;
-    }
-}
-
-function showMessages(action) {
-    var chat = $("#chat");
-    var chatContainer = $("#chat_container");
-    if (action) {
-        if (action == 1) { // show previous 25
-            programScroll = true;
-            var scrolledBottom = chat.height() - chatContainer.scrollTop();
-            var i = firstShownMessage - 1;
-            var shown = 0;
-            while (i > -1 && shown < 26) {
-                if (chatMessages[i] != undefined) {
-                    showMessage(chatMessages[i]);
-                    shown++;
-                }
-                i--;
-            }
-            chatContainer.scrollTop(chat.height() - scrolledBottom);
-            programScroll = false;
-        }
-    }
-    if (lastShownMessage != -1) { // for new incoming messages
-        for (var j = lastShownMessage; j <= lastMessage; j++) {
-            if (chatMessages[j] != undefined) {
-                showMessage(chatMessages[j]);
-            }
-        }
-        if(!userScrolledChat){
-            programScroll = true;
-            chatContainer.scrollTop(chat.height() + 99999);
-            programScroll = false;
-        }
-    }
-    if (firstShownMessage == Infinity) { // initial (last 25 messages)
-        var i = lastMessage;
-        var shown = 0;
-        while (i > -1 && shown < 26) {
-            if (chatMessages[i] != undefined) {
-                showMessage(chatMessages[i]);
-                shown++;
-            }
-            i--;
-        }
-        chatContainer.scrollTop(chat.height() + 99999);
-    }
-}
-
-function showMessage(m) {
-    if (!m.shown) {
-
-        m.shown = true;
-        var date = new Date(m.time);
-
-        var html = [];
-        var i = 0;
-        html[i++] = "<table class='message' number='";
-        html[i++] = m.number;
-        html[i++] = "'><tr><td class='name_text'><span class='username'>";
-        html[i++] = m.username;
-        html[i++] = ": </span><span class='text'>";
-        html[i++] = m.text;
-        html[i++] = "</span></td><td class='time'>";
-        html[i++] = formatDate(date);
-        html[i++] = "</td></tr></table>";
-
-        var message = html.join("");
-
-        if (lastShownMessage == -1) {
-            $("#chat").append(message);
-        } else {
-            var diff = 1;
-            var n;
-            while (true) {
-                n = m.number + diff;
-                if (chatMessages[n] && chatMessages[n].shown) {
-                    $(".message[number='" + n + "']").before(message);
-                    break;
-                }
-                n = m.number - diff;
-                if (chatMessages[n] && chatMessages[n].shown) {
-                    $(".message[number='" + n + "']").after(message);
-                    break;
-                }
-                diff++;
-            }
-        }
-
-        firstShownMessage = Math.min(m.number, firstShownMessage);
-        lastShownMessage = Math.max(m.number, lastShownMessage);
-
-    }
-}
-
 function connectWebSocket() {
     var socket = new SockJS('/socket');
     stompClient = Stomp.over(socket);
     stompClient.connect({}, function (frame) {
         stompConnected = true;
-        console.log('Connected: ' + frame);
     });
 }
 
-function subscribeChat(chatId) {
-    if (stompConnected) {
-        chatSubscription = stompClient.subscribe("/chat/" + chatId, function (message) {
-            addMessages(JSON.parse(message.body));
-            showMessages();
-        });
-        subscribedChatId = chatId;
 
-        console.log('subscribed to chat: ' + chatId);
-    } else { // Please, try again later
-        setTimeout(function () {
-            subscribeChat(chatId);
-        }, 300);
-    }
-}
+var chat = {
+    votes: [],
+    chatId: undefined,
+    messagesSubscription: undefined,
+    eventsSubscription: undefined,
+    messages: [],
+    lastMessage: -1,
+    firstShownMessage: Infinity,
+    lastShownMessage: -1,
+    userScrolledChat: false, // defines if we should scroll when new message coming
+    programScroll: false, // true - program scrolling, false - user scrolling (for scroll event)
+    setUp: function (url) {
+        var regExp = /^\/question\?id=(.*)/;
+        this.chatId = regExp.exec(url)[1];
 
-function unsubscribeChat(chatId) {
-    if (chatSubscription) {
-        chatSubscription.unsubscribe();
-        console.log('unsubscribed from chat: ' + chatId);
-    }
-}
+        this.subscribe();
 
-function sendMessage() {
-    if (loggedIn) {
-        var messageInput = $("#message_input");
-        var text = messageInput.val();
-        if (text) {
-            stompClient.send("/app/chat/" + subscribedChatId, {}, JSON.stringify({text: text}));
+        if (loggedIn) {
+            var messageInput = $("#message_input");
+            messageInput.prop("disabled", false);
+            messageInput.attr("placeholder", "Введите сообщение...");
+            messageInput.focus();
+
+            var sendButton = $("#send_message_button");
+            sendButton.prop("disabled", false);
         }
-        messageInput.val("");
-        messageInput.focus();
+
+        //load current messages
+        $.ajax({
+            type: "GET",
+            url: "/loadChatMessages/" + this.chatId,
+            success: function (msgs) {
+                chat.addMessages(msgs);
+                chat.showMessages();
+            }
+        });
+        
+        
+        //load votes
+        if(loggedIn && !chat.votes[chat.chatId]) {
+            $.ajax({
+                type: "GET",
+                url: "/loadChatVotes/" + this.chatId,
+                success: function (numbers) {
+                    chat.votes[chat.chatId] = [];
+                    $.each(numbers, function () {
+                        var number = this;
+                        chat.votes[chat.chatId][number] = true;
+                        $(".message[number='" + number + "']").find(".vote_up").addClass("voted");
+                    });
+                }
+            });
+        }
+
+
+        //scrolling
+        var chatContainer = $('#chat_container');
+        chatContainer.scroll(function () {
+
+            if (!this.programScroll) {
+                this.userScrolledChat = ($("#chat").height() - chatContainer.height()) > chatContainer.scrollTop();
+            }
+
+            if (chatContainer.scrollTop() < 50) {
+
+                if (this.firstShownMessage != 0) {
+                    this.showMessages(1);
+                    //alert("I should show you previous messages")
+                }
+            }
+        });
+
+        $("#message_input").keypress(function (e) {
+            if (e.keyCode == 13) {
+                chat.sendMessage();
+            }
+        });
+        $("#send_message_button").click(function () {
+            chat.sendMessage();
+        });
+
+        //voting
+        $("#chat").click(function (e) {
+            var target = $(e.target);
+            if (target.hasClass("vote_up")) {
+                chat.sendVote(target.parents(".message").attr("number"));
+            }
+        });
+    },
+    finalize: function () {
+        this.unsubscribe();
+        this.chatId = undefined;
+        this.messagesSubscription = undefined;
+        this.messages = [];
+        this.lastMessage = -1;
+        this.firstShownMessage = Infinity;
+        this.lastShownMessage = -1;
+        this.userScrolledChat = false;
+        this.programScroll = false;
+    },
+    subscribe: function () {
+        if (stompConnected) {
+            this.messagesSubscription = stompClient.subscribe("/chat/messages/" + this.chatId, function (message) {
+                chat.addMessages(JSON.parse(message.body));
+                chat.showMessages();
+            });
+            this.eventsSubscription = stompClient.subscribe("/chat/events/" + this.chatId, function (message) {
+                var event = JSON.parse(message.body);
+                if (event.action == "vote") {
+                    chat.receiveVote(event);
+                }
+            });
+        } else { // Please, try again later
+            setTimeout(function () {
+                chat.subscribe();
+            }, 300);
+        }
+    },
+    unsubscribe: function () {
+        if (this.messagesSubscription) {
+            this.messagesSubscription.unsubscribe();
+        }
+        if (this.eventsSubscription) {
+            this.eventsSubscription.unsubscribe();
+        }
+    },
+    addMessages: function (msgs) {
+        for (var i = 0; i < msgs.length; i++) {
+            this.addMessage(msgs[i]);
+        }
+    },
+    addMessage: function (message) {
+        this.lastMessage = Math.max(this.lastMessage, parseInt(message.number));
+        if (this.messages[message.number] == undefined) { // do not overwrite existing
+            this.messages[message.number] = message;
+        }
+    },
+    showMessages: function (action) {
+        var chatDOM = $("#chat");
+        var chatContainer = $("#chat_container");
+        if (action) {
+            if (action == 1) { // show previous 25
+                this.programScroll = true;
+                var scrolledBottom = chatDOM.height() - chatContainer.scrollTop();
+                var i = this.firstShownMessage - 1;
+                var shown = 0;
+                while (i > -1 && shown < 26) {
+                    if (this.messages[i] != undefined) {
+                        this.showMessage(this.messages[i]);
+                        shown++;
+                    }
+                    i--;
+                }
+                chatContainer.scrollTop(chatDOM.height() - scrolledBottom);
+                this.programScroll = false;
+            }
+        }
+        if (this.lastShownMessage != -1) { // for new incoming messages
+            for (var j = this.lastShownMessage; j <= this.lastMessage; j++) {
+                if (this.messages[j] != undefined) {
+                    this.showMessage(this.messages[j]);
+                }
+            }
+            if (!this.userScrolledChat) {
+                this.programScroll = true;
+                chatContainer.scrollTop(chatDOM.height() + 99999);
+                this.programScroll = false;
+            }
+        }
+        if (this.firstShownMessage == Infinity) { // initial (last 25 messages)
+            var i = this.lastMessage;
+            var shown = 0;
+            while (i > -1 && shown < 26) {
+                if (this.messages[i] != undefined) {
+                    this.showMessage(this.messages[i]);
+                    shown++;
+                }
+                i--;
+            }
+            chatContainer.scrollTop(chatDOM.height() + 99999);
+        }
+    },
+    showMessage: function (m) {
+        if (!m.shown) {
+
+            m.shown = true;
+            var date = new Date(m.time);
+
+            var html = [];
+            var i = 0;
+            html[i++] = "<table class='message' number='";
+            html[i++] = m.number;
+            html[i++] = "'><tr><td class='votes'><span class='vote_up";
+            if (!myUsername || myUsername == m.username) {
+                html[i++] = " disabled";
+            }
+            if(chat.votes[chat.chatId] && chat.votes[chat.chatId][m.number]){
+                html[i++] = " voted";
+            }
+            html[i++] = "'></span><span class='votes_count'>";
+            if (m.votes > 0) {
+                html[i++] = m.votes;
+            }
+            html[i++] = "</span></td><td class='name_text'><span class='username'>";
+            html[i++] = m.username;
+            html[i++] = ": </span><span class='text'>";
+            html[i++] = m.text;
+            html[i++] = "</span></td><td class='time'>";
+            html[i++] = formatDate(date);
+            html[i++] = "</td></tr></table>";
+
+            var message = html.join("");
+
+            if (this.lastShownMessage == -1) {
+                $("#chat").append(message);
+            } else {
+                var diff = 1;
+                var n;
+                while (true) {
+                    n = m.number + diff;
+                    if (this.messages[n] && this.messages[n].shown) {
+                        $(".message[number='" + n + "']").before(message);
+                        break;
+                    }
+                    n = m.number - diff;
+                    if (this.messages[n] && this.messages[n].shown) {
+                        $(".message[number='" + n + "']").after(message);
+                        break;
+                    }
+                    diff++;
+                }
+            }
+
+            this.firstShownMessage = Math.min(m.number, this.firstShownMessage);
+            this.lastShownMessage = Math.max(m.number, this.lastShownMessage);
+
+        }
+    },
+    sendMessage: function () {
+        if (loggedIn) {
+            var messageInput = $("#message_input");
+            var text = messageInput.val();
+            if (text) {
+                stompClient.send("/app/chat/messages/" + this.chatId, {}, JSON.stringify({text: text}));
+            }
+            messageInput.val("");
+            messageInput.focus();
+        }
+    },
+    sendVote: function (number) {
+        if (loggedIn) {
+            var event = {action: "vote", number: number};
+            stompClient.send("/app/chat/events/" + this.chatId, {}, JSON.stringify(event));
+        }
+    },
+    receiveVote: function (event) {
+        //alert(event.result);
+        var messageDOM = $(".message[number='" + event.number + "']");
+        //messageDOM.css("background", "red");
+        if (event.username == myUsername) {
+            if (event.result) {
+                messageDOM.find(".vote_up").addClass("voted");
+                chat.votes[chat.chatId][event.number] = true;
+            } else {
+                messageDOM.find(".vote_up").removeClass("voted");
+                chat.votes[chat.chatId][event.number] = undefined;
+            }
+        }
+        var votesCountDOM = messageDOM.find(".votes_count");
+        var sign = event.result ? 1 : -1;
+        var votes = parseInt(0 + votesCountDOM.html()) + sign;
+        votesCountDOM.html(votes == 0 ? "" : votes);
+
+
     }
-}
+};
+
 
 function formatDate(date) {
 

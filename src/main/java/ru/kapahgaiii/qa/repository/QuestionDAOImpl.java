@@ -1,35 +1,33 @@
 package ru.kapahgaiii.qa.repository;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ru.kapahgaiii.qa.domain.Question;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import javax.transaction.Transactional;
 import java.util.List;
-import java.util.Map;
 
 @Repository
+@Transactional
 public class QuestionDAOImpl implements QuestionDAO {
-    private Map<Integer, Question> questions = new HashMap<Integer, Question>();
 
-    public QuestionDAOImpl() {
-        Question question = new Question();
-        question.setId(1);
-        question.setText("Обсуждаем приложение");
-        questions.put(question.getId(), question);
-        Question q2 = new Question();
-        q2.setId(2);
-        q2.setText("Флудильня");
-        questions.put(q2.getId(), q2);
-    }
+    @Autowired
+    SessionFactory sessionFactory;
 
     @Override
+    @SuppressWarnings("unchecked")
     public List<Question> getQuestionsList() {
-        return new ArrayList<Question>(questions.values());
+        return sessionFactory.getCurrentSession().createQuery("from Question").list();
     }
 
     @Override
     public Question getQuestionById(Integer id) {
-        return questions.get(id);
+        return (Question) sessionFactory.getCurrentSession().get(Question.class, id);
+    }
+
+    @Override
+    public void saveQuestion(Question question) {
+        sessionFactory.getCurrentSession().save(question);
     }
 }

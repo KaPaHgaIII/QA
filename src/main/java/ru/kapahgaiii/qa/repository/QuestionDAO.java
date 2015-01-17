@@ -10,4 +10,6 @@ public interface QuestionDAO {
 
     public List<Question> getQuestionsList();
 
+    public void saveQuestion(Question question);
+
 }

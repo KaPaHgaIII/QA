@@ -8,6 +8,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.servlet.configuration.EnableWebMvcSecurity;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
@@ -25,28 +28,15 @@ import java.util.regex.Pattern;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 
+
     @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder builder) throws Exception {
-        builder.inMemoryAuthentication().withUser("Dazar").password("951159").roles("STUDENT");
-        builder.inMemoryAuthentication().withUser("Денис").password("951159").roles("STUDENT");
-        builder.inMemoryAuthentication().withUser("Vladimir").password("1234").roles("STUDENT");
+    public void configureGlobal(AuthenticationManagerBuilder builder, UserDetailsService service) throws Exception {
+        builder.userDetailsService(service).passwordEncoder(passwordEncoder());
     }
 
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-//        http.authorizeRequests()
-//                .antMatchers("/login").permitAll()
-//                .antMatchers("/**").access("hasRole('ROLE_STUDENT')")
-//                .and()
-//                .formLogin().loginPage("/login").failureUrl("/login?error").defaultSuccessUrl("/")
-//                .usernameParameter("username").passwordParameter("password")
-//                .and()
-//                .logout().logoutSuccessUrl("/")
-//                .and()
-//                .exceptionHandling().accessDeniedPage("/403")
-//                .and()
-//                .csrf();
         http.authorizeRequests()
                 .antMatchers("/**").permitAll()
                 .and()
@@ -76,6 +66,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public AuthenticationFailureHandler authenticationFailureHandler() {
         return new CustomAuthenticationFailureHandler();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }
 

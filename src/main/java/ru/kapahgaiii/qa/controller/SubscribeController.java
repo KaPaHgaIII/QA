@@ -26,10 +26,10 @@ public class SubscribeController implements ApplicationListener<ApplicationEvent
             SessionSubscribeEvent subscribeEvent = (SessionSubscribeEvent) applicationEvent;
             MessageHeaders headers = subscribeEvent.getMessage().getHeaders();
             System.out.println("Subscribed: " + headers.get("simpSessionId"));
-            /*String destination = subscribeEvent.getMessage().getHeaders().get("simpDestination").toString();
+            /*String destination = subscribeEvent.getMessageDTO().getHeaders().get("simpDestination").toString();
             Integer questionId = Integer.parseInt(destination.substring(6));
-            messagingTemplate.convertAndSend(destination, chatService.getMessages(questionId).toArray());
-            System.out.println("SENDING MESSAGES: " + chatService.getMessages(questionId).size());*/
+            messagingTemplate.convertAndSend(destination, chatService.getMessageDTOs(questionId).toArray());
+            System.out.println("SENDING MESSAGES: " + chatService.getMessageDTOs(questionId).size());*/
         }
         if (applicationEvent.getClass() == SessionUnsubscribeEvent.class) {
             System.out.println("UNSUBSCRIBED");
