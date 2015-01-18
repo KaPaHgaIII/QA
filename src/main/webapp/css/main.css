@@ -54,6 +54,7 @@ input[type='button'], input[type='submit'] {
     font-size: 14px;
     line-height: 26px;
     font-family: Arial, Helvetica, sans-serif;
+    height: 26px;
 }
 
 input[type='button']:hover, input[type='submit']:hover {
@@ -104,6 +105,28 @@ input[type='button']:active, input[type='submit']:active {
 #question_back {
     display: block;
     margin-bottom: 15px;
+}
+
+#users_in_chat {
+    float: right;
+}
+
+#users_in_chat ul li {
+    list-style: none;
+    font-weight: bold;
+    font-size: 12px;
+
+}
+
+#users_in_chat ul li.anon_users {
+    font-weight: normal !important;
+}
+
+#question_text {
+    width: 625px;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-top: 15px;
 }
 
 #chat_wr {
@@ -168,17 +191,20 @@ input[type='button']:active, input[type='submit']:active {
 }
 
 #chat_wr #chat .message .votes .votes_count {
-    line-height: 16px;
+    line-height: 15px;
     margin: 0 5px 0 0;
     min-width: 15px;
     display: inline-block;
     text-align: center;
+    font-family: monospace;
+    font-weight: bold;
 }
 
 #chat_wr #chat .message .name_text {
-    word-break: break-all;
     overflow-wrap: break-word;
+    word-wrap: break-word;
     line-height: 16px;
+    height: 16px;
 }
 
 #chat_wr #chat .message .username {

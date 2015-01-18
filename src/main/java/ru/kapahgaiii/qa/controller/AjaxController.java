@@ -8,7 +8,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import ru.kapahgaiii.qa.domain.Question;
+import ru.kapahgaiii.qa.dto.ChatInitial;
 import ru.kapahgaiii.qa.dto.ChatMessage;
+import ru.kapahgaiii.qa.dto.Subscriber;
 import ru.kapahgaiii.qa.service.ChatService;
 import ru.kapahgaiii.qa.service.UserService;
 
@@ -23,7 +25,7 @@ public class AjaxController {
 
     @Autowired
     private ChatService chatService;
-    
+
     @Autowired
     private UserService userService;
 
@@ -57,24 +59,36 @@ public class AjaxController {
         return "login :: content";
     }
 
-    @RequestMapping("/loadChatMessages/{chatId}")
+    @RequestMapping("/loadChat/{chatId}")
     public
     @ResponseBody
-    ChatMessage[] getChatMessages(@PathVariable String chatId) {
+    ChatInitial getChatInfo(@PathVariable String chatId, Principal principal) {
         Question question = chatService.getQuestionById(Integer.parseInt(chatId));
+        ChatInitial response = new ChatInitial();
+
         List<ChatMessage> messagesList = chatService.getMessageDTOsList(question);
-        return messagesList.toArray(new ChatMessage[messagesList.size()]);
+        response.setMessages(messagesList.toArray(new ChatMessage[messagesList.size()]));
+
+        if (principal != null) {
+            Set<Integer> numbers = chatService.getVotes(question, userService.findByUsername(principal.getName()));
+            response.setVotedNumbers(numbers.toArray(new Integer[numbers.size()]));
+        }
+
+        Set<Subscriber> subscribers = chatService.getChatSubscribers(question);
+        if (subscribers != null) {
+            response.setSubscribers(subscribers.toArray(new Subscriber[subscribers.size()]));
+        } else {
+            response.setSubscribers(new Subscriber[0]);
+        }
+
+        return response;
     }
-    
+
     @RequestMapping("/loadChatVotes/{chatId}")
     public
     @ResponseBody
     Integer[] getChatVotes(@PathVariable String chatId, Principal principal) {
-        if (principal != null) {
-            Question question = chatService.getQuestionById(Integer.parseInt(chatId));
-            Set<Integer> numbers = chatService.getVotes(question, userService.findByUsername(principal.getName()));
-            return numbers.toArray(new Integer[numbers.size()]);
-        }
+
         return null;
     }
 

@@ -14,6 +14,9 @@ public class Question {
     @JoinColumn(name = "uid")
     private User user;
 
+    @Column(name = "title")
+    private String title;
+    
     @Column(name = "text")
     private String text;
 
@@ -26,6 +29,14 @@ public class Question {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public String getText() {

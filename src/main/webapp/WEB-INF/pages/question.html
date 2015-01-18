@@ -17,7 +17,18 @@
         <input type="hidden" th:value="${question.getText()}" value="Вопрос" id="title">
         <a href="index.html" th:href="@{/}" id="question_back">Назад к списку вопросов</a>
 
-        <h3 th:text="${question.getText()}">Текст вопроса</h3>
+        <div id="users_in_chat">
+            Вопрос просматривают:
+            <ul>
+                <li class="anon_users"></li>
+            </ul>
+        </div>
+        
+        <h3 th:text="${question.getTitle()}">Заголовок вопроса</h3>
+        
+        <div id="question_text" th:text="${question.getText()}">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+        </div>
 
         <div id="chat_wr">
             <div id="chat_container">

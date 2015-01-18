@@ -968,6 +968,7 @@ var SockJS = function(url, dep_protocols_whitelist, options) {
     }
     that._protocols = [];
     that.protocol = null;
+    that.sessionId = null; // KaPaHgaIII fix
     that.readyState = SockJS.CONNECTING;
     that._ir = createInfoReceiver(that._base_url);
     that._ir.onfinish = function(info, rtt) {
@@ -1144,6 +1145,7 @@ SockJS.prototype._try_next_protocol = function(close_event) {
             });
 
             var connid = utils.random_string(8);
+            that.sessionId = connid; // KaPaHgaIII fix
             var trans_url = that._base_url + '/' + that._server + '/' + connid;
             that._debug('Opening transport:', protocol, ' url:'+trans_url,
                         ' RTO:'+that._options.rto);

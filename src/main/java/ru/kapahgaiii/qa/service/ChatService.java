@@ -7,14 +7,14 @@ import ru.kapahgaiii.qa.domain.Question;
 import ru.kapahgaiii.qa.domain.User;
 import ru.kapahgaiii.qa.domain.Vote;
 import ru.kapahgaiii.qa.dto.ChatMessage;
+import ru.kapahgaiii.qa.dto.Subscriber;
 import ru.kapahgaiii.qa.other.VoteType;
 import ru.kapahgaiii.qa.repository.ChatDAO;
 import ru.kapahgaiii.qa.repository.QuestionDAO;
 import ru.kapahgaiii.qa.repository.UserDAO;
 
 import javax.transaction.Transactional;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service("ChatService")
 public class ChatService {
@@ -27,6 +27,8 @@ public class ChatService {
 
     @Autowired
     private UserDAO userDAO;
+
+    private Map<Question, Set<Subscriber>> subscribedToChat = new HashMap<Question, Set<Subscriber>>();
 
     public ChatMessage addMessage(Message message) {
         return chatDAO.addMessage(message);
@@ -51,7 +53,7 @@ public class ChatService {
     public Message getMessage(Question question, Integer number) {
         return chatDAO.getMessage(question, number);
     }
-    
+
     public Set<Integer> getVotes(Question question, User user) {
         return chatDAO.getVotes(question, user);
 
@@ -82,4 +84,18 @@ public class ChatService {
             return false;
         }
     }
+
+    public void addChatSubscriber(Question question, Subscriber subscriber) {
+        subscribedToChat.putIfAbsent(question, new HashSet<Subscriber>());
+        subscribedToChat.get(question).add(subscriber);
+    }
+
+    public void removeChatSubscriber(Question question, Subscriber subscriber) {
+        subscribedToChat.get(question).remove(subscriber);
+    }
+
+    public Set<Subscriber> getChatSubscribers(Question question) {
+        return subscribedToChat.get(question);
+    }
+
 }

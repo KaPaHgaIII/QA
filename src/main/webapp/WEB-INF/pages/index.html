@@ -21,7 +21,7 @@
 
         <div id="questions">
             <div class="item" th:each="q : ${questions}">
-                <a href="question.html" th:href="@{/question(id=${q.getId()})}" th:text="${q.getText()}">Текст вопроса</a>
+                <a href="question.html" th:href="@{/question(id=${q.getId()})}" th:text="${q.getTitle()}">Текст вопроса</a>
             </div>
         </div>
     </div>

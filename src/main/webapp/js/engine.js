@@ -1,6 +1,6 @@
 var stompClient = null;
 var stompConnected = false;
-
+var sessionId = null;
 $(function () {
     var token = $("meta[name='_csrf']").attr("content");
     var header = $("meta[name='_csrf_header']").attr("content");
@@ -8,20 +8,15 @@ $(function () {
         xhr.setRequestHeader(header, token);
     });
 });
-
 //first time come or page refresh
 $(document).ready(function () {
-
     connectWebSocket();
-
     $("#logout_button").click(function () {
         $("#logout_form").submit();
     });
-
     //load content
     var url = location.pathname + location.search + location.hash;
     getPage(url);
-
     //add history listener
     window.setTimeout(function () { //fix for chrome
         window.addEventListener("popstate", function () {
@@ -31,11 +26,7 @@ $(document).ready(function () {
             getPage(url);
         }, false);
     }, 1);
-
-
 });
-
-
 function getPage(url) {
     var hash = window.location.hash.substring(1);
     if (hash == "loginError") {
@@ -49,14 +40,11 @@ function getPage(url) {
         }
     });
 }
-
 function loadPage(url, data) {
-
     $("#content").remove(); //remove old content, bound events and jquery data
     $("#content_container").html(data);
     setTitle();
     updateLinks();
-
     //websocket maintenance
     if (url.match("^/question")) {
         chat.setUp(url)
@@ -64,13 +52,11 @@ function loadPage(url, data) {
         chat.finalize();
     }
 }
-
 function setTitle() {
     var titleHolder = $("#title");
     document.title = titleHolder.val();
     titleHolder.remove();
 }
-
 //add click event listener to <a> tags
 function updateLinks() {
     $.each($("a"), function () {
@@ -84,16 +70,14 @@ function updateLinks() {
         }, true);
     });
 }
-
 function connectWebSocket() {
     var socket = new SockJS('/socket');
     stompClient = Stomp.over(socket);
     stompClient.connect({}, function (frame) {
         stompConnected = true;
+        sessionId = socket.sessionId;
     });
 }
-
-
 var chat = {
     votes: [],
     chatId: undefined,
@@ -105,67 +89,77 @@ var chat = {
     lastShownMessage: -1,
     userScrolledChat: false, // defines if we should scroll when new message coming
     programScroll: false, // true - program scrolling, false - user scrolling (for scroll event)
+    subscribedUsers: [],
     setUp: function (url) {
         var regExp = /^\/question\?id=(.*)/;
         this.chatId = regExp.exec(url)[1];
-
-        this.subscribe();
-
+        chat.subscribe();
         if (loggedIn) {
             var messageInput = $("#message_input");
             messageInput.prop("disabled", false);
             messageInput.attr("placeholder", "Введите сообщение...");
-            messageInput.focus();
-
             var sendButton = $("#send_message_button");
             sendButton.prop("disabled", false);
         }
-
-        //load current messages
+        //load chat
         $.ajax({
             type: "GET",
-            url: "/loadChatMessages/" + this.chatId,
-            success: function (msgs) {
-                chat.addMessages(msgs);
+            url: "/loadChat/" + this.chatId,
+            success: function (response) {
+                //load messages
+                chat.addMessages(response.messages);
                 chat.showMessages();
-            }
-        });
-        
-        
-        //load votes
-        if(loggedIn && !chat.votes[chat.chatId]) {
-            $.ajax({
-                type: "GET",
-                url: "/loadChatVotes/" + this.chatId,
-                success: function (numbers) {
+                //load user votes
+                if (loggedIn) {
                     chat.votes[chat.chatId] = [];
-                    $.each(numbers, function () {
+                    $.each(response.votedNumbers, function () {
                         var number = this;
                         chat.votes[chat.chatId][number] = true;
                         $(".message[number='" + number + "']").find(".vote_up").addClass("voted");
                     });
                 }
-            });
-        }
+                //show users in chat
+                var showed = []; // to avoid duplicate
+                response.subscribers.unshift({username: myUsername, sessionId: sessionId});
+                $.each(response.subscribers, function () {
+                    var subscriber = this;
+                    // username for anonymous
+                    if (subscriber.username == null) {
+                        subscriber.username = "";
+                    }
+                    //continue if duplicate
+                    if (showed[subscriber.sessionId]) {
+                        return true;
+                    }
+                    showed[subscriber.sessionId] = true;
 
+                    // init subscribedUsers[] value
+                    if (!chat.subscribedUsers[subscriber.username]) {
+                        chat.subscribedUsers[subscriber.username] = 0;
+                    }
+                    // count opened pages for username and anonymous for empty username
+                    chat.subscribedUsers[subscriber.username]++;
 
+                    // show if user
+                    if (subscriber.username) {
+                        chat.showSubscribed(subscriber.username);
+                    }
+                });
+                chat.showAnonymous();
+            }
+        });
         //scrolling
         var chatContainer = $('#chat_container');
         chatContainer.scroll(function () {
-
             if (!this.programScroll) {
                 this.userScrolledChat = ($("#chat").height() - chatContainer.height()) > chatContainer.scrollTop();
             }
-
             if (chatContainer.scrollTop() < 50) {
-
                 if (this.firstShownMessage != 0) {
                     this.showMessages(1);
-                    //alert("I should show you previous messages")
                 }
             }
         });
-
         $("#message_input").keypress(function (e) {
             if (e.keyCode == 13) {
                 chat.sendMessage();
@@ -174,7 +168,6 @@ var chat = {
         $("#send_message_button").click(function () {
             chat.sendMessage();
         });
-
         //voting
         $("#chat").click(function (e) {
             var target = $(e.target);
@@ -193,6 +186,7 @@ var chat = {
         this.lastShownMessage = -1;
         this.userScrolledChat = false;
         this.programScroll = false;
+        this.subscribedUsers = [];
     },
     subscribe: function () {
         if (stompConnected) {
@@ -204,7 +198,34 @@ var chat = {
                 var event = JSON.parse(message.body);
                 if (event.action == "vote") {
                     chat.receiveVote(event);
+                } else if (event.action == "subscribe") {
+                    if (!event.subscriber.username) {
+                        event.subscriber.username = "";
+                    }
+                    // init subscribedUsers[] value
+                    if (!chat.subscribedUsers[event.subscriber.username]) {
+                        chat.subscribedUsers[event.subscriber.username] = 0;
+                    }
+                    // count opened pages for username and anonymous for empty username
+                    chat.subscribedUsers[event.subscriber.username]++;
+
+                    if (event.subscriber.username) {
+                        chat.showSubscribed(event.subscriber.username);
+                    }
+                    chat.showAnonymous();
+                } else if (event.action == "unsubscribe") {
+                    if (!event.subscriber.username) {
+                        event.subscriber.username = "";
+                    }
+                    // count opened pages for username and anonymous for empty username
+                    chat.subscribedUsers[event.subscriber.username]--;
+
+                    if (event.subscriber.username) {
+                        chat.removeSubscribed(event.subscriber.username);
+                    }
+                    chat.showAnonymous();
                 }
+
             });
         } else { // Please, try again later
             setTimeout(function () {
@@ -213,11 +234,12 @@ var chat = {
         }
     },
     unsubscribe: function () {
-        if (this.messagesSubscription) {
-            this.messagesSubscription.unsubscribe();
-        }
+        //reverse order important!
         if (this.eventsSubscription) {
             this.eventsSubscription.unsubscribe();
+        }
+        if (this.messagesSubscription) {
+            this.messagesSubscription.unsubscribe();
         }
     },
     addMessages: function (msgs) {
@@ -278,10 +300,8 @@ var chat = {
     },
     showMessage: function (m) {
         if (!m.shown) {
-
             m.shown = true;
             var date = new Date(m.time);
-
             var html = [];
             var i = 0;
             html[i++] = "<table class='message' number='";
@@ -290,7 +310,7 @@ var chat = {
             if (!myUsername || myUsername == m.username) {
                 html[i++] = " disabled";
             }
-            if(chat.votes[chat.chatId] && chat.votes[chat.chatId][m.number]){
+            if (chat.votes[chat.chatId] && chat.votes[chat.chatId][m.number]) {
                 html[i++] = " voted";
             }
             html[i++] = "'></span><span class='votes_count'>";
@@ -302,11 +322,9 @@ var chat = {
             html[i++] = ": </span><span class='text'>";
             html[i++] = m.text;
             html[i++] = "</span></td><td class='time'>";
-            html[i++] = formatDate(date);
+            html[i++] = utils.formatDate(date);
             html[i++] = "</td></tr></table>";
-
             var message = html.join("");
-
             if (this.lastShownMessage == -1) {
                 $("#chat").append(message);
             } else {
@@ -326,10 +344,8 @@ var chat = {
                     diff++;
                 }
             }
-
             this.firstShownMessage = Math.min(m.number, this.firstShownMessage);
             this.lastShownMessage = Math.max(m.number, this.lastShownMessage);
-
         }
     },
     sendMessage: function () {
@@ -350,9 +366,7 @@ var chat = {
         }
     },
     receiveVote: function (event) {
-        //alert(event.result);
         var messageDOM = $(".message[number='" + event.number + "']");
-        //messageDOM.css("background", "red");
         if (event.username == myUsername) {
             if (event.result) {
                 messageDOM.find(".vote_up").addClass("voted");
@@ -366,28 +380,63 @@ var chat = {
         var sign = event.result ? 1 : -1;
         var votes = parseInt(0 + votesCountDOM.html()) + sign;
         votesCountDOM.html(votes == 0 ? "" : votes);
-
-
+    },
+    showSubscribed: function (username) {
+        //alert("show " + username + ": " + chat.subscribedUsers[username])
+        if (chat.subscribedUsers[username] == 1) {
+            $("#users_in_chat .anon_users").before("<li username='" + username + "'>" + username + "</li>")
+        }
+    },
+    removeSubscribed: function (username) {
+        if (chat.subscribedUsers[username] == 0) {
+            $("#users_in_chat li[username='" + username + "']").remove();
+        }
+    },
+    showAnonymous: function () {
+        var anonCount = chat.subscribedUsers[""];
+        var anonDOM = $("#users_in_chat .anon_users");
+        if (anonCount) {
+            // do we need " и"?
+            var and = "";
+            for (var username in chat.subscribedUsers) {
+                // first becomes false when "" (anon), last - when chat.subscribedUsers[username] == 0
+                if (username && chat.subscribedUsers.hasOwnProperty(username) && chat.subscribedUsers[username]) {
+                    and = "и ";
+                    break;
+                }
+            }
+            anonDOM.html(and + anonCount + utils.getGuestsWord(anonCount));
+        } else {
+            anonDOM.html("");
+        }
     }
 };
-
-
-function formatDate(date) {
-
-    var hh = date.getHours();
-    if (hh < 10) {
-        hh = "0" + hh;
+var utils = {
+    formatDate: function (date) {
+        var hh = date.getHours();
+        if (hh < 10) {
+            hh = "0" + hh;
+        }
+        var mm = date.getMinutes();
+        if (mm < 10) {
+            mm = "0" + mm;
+        }
+        var ss = date.getSeconds();
+        if (ss < 10) {
+            ss = "0" + ss;
+        }
+        return hh + ":" + mm + ":" + ss;
+    },
+    getGuestsWord: function (count) {
+        switch (count % 10) {
+            case 1:
+                return " гость";
+            case 2:
+            case 3:
+            case 4:
+                return " гостя";
+            default:
+                return " гостей";
+        }
     }
-
-    var mm = date.getMinutes();
-    if (mm < 10) {
-        mm = "0" + mm;
-    }
-
-    var ss = date.getSeconds();
-    if (ss < 10) {
-        ss = "0" + ss;
-    }
-
-    return hh + ":" + mm + ":" + ss;
-}
+};

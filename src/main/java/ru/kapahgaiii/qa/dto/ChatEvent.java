@@ -3,6 +3,8 @@ package ru.kapahgaiii.qa.dto;
 public class ChatEvent {
 
     private String action;
+    
+    private Subscriber subscriber;
 
     private String username;
 
@@ -10,12 +12,27 @@ public class ChatEvent {
 
     private boolean result;
 
+    public ChatEvent() {
+    }
+
+    public ChatEvent(String action) {
+        this.action = action;
+    }
+
     public String getAction() {
         return action;
     }
 
     public void setAction(String action) {
         this.action = action;
+    }
+
+    public Subscriber getSubscriber() {
+        return subscriber;
+    }
+
+    public void setSubscriber(Subscriber subscriber) {
+        this.subscriber = subscriber;
     }
 
     public Integer getNumber() {
