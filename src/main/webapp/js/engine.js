@@ -175,6 +175,9 @@ var chat = {
                 chat.sendVote(target.parents(".message").attr("number"));
             }
         });
+        chatContainer.perfectScrollbar({
+            includePadding: true
+        });
     },
     finalize: function () {
         this.unsubscribe();

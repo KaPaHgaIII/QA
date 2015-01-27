@@ -134,10 +134,13 @@ input[type='button']:active, input[type='submit']:active {
 }
 
 #chat_wr #chat_container {
+    position: relative;
     height: 400px;
     width: 625px;
-    overflow-y: scroll;
-    box-shadow: inset 1px 1px 1px 1px #777777;
+    overflow-y: hidden;
+    border-top: 1px solid #AAAAAA;
+    padding-top: 5px;
+    /*box-shadow: inset 1px 1px 1px 1px #777777;*/
 }
 
 #chat_wr #chat_container #chat {
