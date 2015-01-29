@@ -1,12 +1,12 @@
-package ru.kapahgaiii.qa.dto;
+package ru.kapahgaiii.qa.core.objects;
 
 import ru.kapahgaiii.qa.domain.User;
 
-// class is used to describe user, subscribed for chat
+// class is used to describe user, connected to the site
 // for anonymous we keep only sessionId
-// equals and hashcode use all fields: uid, username, sessionId
+// equals and hashcode use only sessionId
 // so, we can get multiple Subscribers for one User
-// it should be checked in the client side
+// it should be checked in the client side and anywhere else
 
 public class Subscriber {
 
@@ -24,10 +24,6 @@ public class Subscriber {
     public Subscriber(User user, String sessionId) {
         this.username = user.getUsername();
         this.sessionId = sessionId;
-    }
-    
-    public void setUser(User user) {
-        this.username = user.getUsername();
     }
 
     public String getUsername() {
@@ -54,15 +50,12 @@ public class Subscriber {
         Subscriber that = (Subscriber) o;
 
         if (!sessionId.equals(that.sessionId)) return false;
-        if (username != null ? !username.equals(that.username) : that.username != null) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        int result = username != null ? username.hashCode() : 0;
-        result = 31 * result + sessionId.hashCode();
-        return result;
+        return sessionId.hashCode();
     }
 }

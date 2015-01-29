@@ -1,6 +1,8 @@
 var stompClient = null;
 var stompConnected = false;
 var sessionId = null;
+var onlineSubscription = null;
+//CSRF
 $(function () {
     var token = $("meta[name='_csrf']").attr("content");
     var header = $("meta[name='_csrf_header']").attr("content");
@@ -17,6 +19,18 @@ $(document).ready(function () {
     //load content
     var url = location.pathname + location.search + location.hash;
     getPage(url);
+
+    //load online
+    setTimeout(function () {
+        $.ajax({
+            type: "GET",
+            url: "/getOnline",
+            success: function (online) {
+                showOnline(online.users, online.guests);
+            }
+        });
+    }, 2000);
+
     //add history listener
     window.setTimeout(function () { //fix for chrome
         window.addEventListener("popstate", function () {
@@ -70,14 +84,32 @@ function updateLinks() {
         }, true);
     });
 }
+function showOnline(users, guests) {
+    var text = "На сайте ";
+    if (users) {
+        text += users + " " + utils.getUsersWord(users)
+    }
+    if (users && guests) {
+        text += " и ";
+    }
+    if (guests) {
+        text += guests + " " + utils.getGuestsWord(guests);
+    }
+    $("#online").text(text);
+}
 function connectWebSocket() {
     var socket = new SockJS('/socket');
     stompClient = Stomp.over(socket);
     stompClient.connect({}, function (frame) {
         stompConnected = true;
         sessionId = socket.sessionId;
+        onlineSubscription = stompClient.subscribe("/online", function (message) {
+            var online = JSON.parse(message.body);
+            showOnline(online.users, online.guests);
+        });
     });
 }
+
 var chat = {
     votes: [],
     chatId: undefined,
@@ -431,6 +463,9 @@ var utils = {
         return hh + ":" + mm + ":" + ss;
     },
     getGuestsWord: function (count) {
+        if (count >= 10 && count <= 20) {
+            return " гостей";
+        }
         switch (count % 10) {
             case 1:
                 return " гость";
@@ -440,6 +475,21 @@ var utils = {
                 return " гостя";
             default:
                 return " гостей";
+        }
+    },
+    getUsersWord: function (count) {
+        if (count >= 10 && count <= 20) {
+            return " пользователей";
+        }
+        switch (count % 10) {
+            case 1:
+                return " пользователь";
+            case 2:
+            case 3:
+            case 4:
+                return " пользователя";
+            default:
+                return " пользователей";
         }
     }
 };

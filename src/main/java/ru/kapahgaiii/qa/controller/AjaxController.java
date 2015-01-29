@@ -7,10 +7,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import ru.kapahgaiii.qa.core.objects.Subscriber;
 import ru.kapahgaiii.qa.domain.Question;
 import ru.kapahgaiii.qa.dto.ChatInitial;
 import ru.kapahgaiii.qa.dto.ChatMessage;
-import ru.kapahgaiii.qa.dto.Subscriber;
+import ru.kapahgaiii.qa.dto.Online;
 import ru.kapahgaiii.qa.service.ChatService;
 import ru.kapahgaiii.qa.service.UserService;
 
@@ -29,10 +30,19 @@ public class AjaxController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private SessionController sessionController;
+
+    private String template(Model model) {
+//        model.addAttribute("guestsOnline", subscribeController.getGuestsOnline());
+//        model.addAttribute("usersOnline", subscribeController.getUsersOnline());
+        return "template";
+    }
+
     @RequestMapping({"/", "/index"})
     public String index(HttpServletRequest request, Model model) {
         if (!isAjax(request)) {
-            return "template";
+            return template(model);
         }
         model.addAttribute("questions", chatService.getQuestionsList());
         return "index :: content";
@@ -41,7 +51,7 @@ public class AjaxController {
     @RequestMapping("/question")
     public String content(HttpServletRequest request, @RequestParam int id, Model model) {
         if (!isAjax(request)) {
-            return "template";
+            return template(model);
         }
         model.addAttribute("question", chatService.getQuestionById(id));
         return "question :: content";
@@ -51,7 +61,7 @@ public class AjaxController {
     public String login(HttpServletRequest request,
                         @RequestParam(value = "error", required = false) String error, Model model) {
         if (!isAjax(request)) {
-            return "template";
+            return template(model);
         }
         if (error != null) {
             model.addAttribute("error", error);
@@ -84,12 +94,11 @@ public class AjaxController {
         return response;
     }
 
-    @RequestMapping("/loadChatVotes/{chatId}")
+    @RequestMapping("/getOnline")
     public
     @ResponseBody
-    Integer[] getChatVotes(@PathVariable String chatId, Principal principal) {
-
-        return null;
+    Online getOnline() {
+        return new Online(sessionController.getUsersOnline(), sessionController.getGuestsOnline());
     }
 
     private boolean isAjax(HttpServletRequest request) {

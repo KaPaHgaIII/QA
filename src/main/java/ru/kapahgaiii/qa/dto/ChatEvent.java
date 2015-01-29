@@ -1,5 +1,7 @@
 package ru.kapahgaiii.qa.dto;
 
+import ru.kapahgaiii.qa.core.objects.Subscriber;
+
 public class ChatEvent {
 
     private String action;

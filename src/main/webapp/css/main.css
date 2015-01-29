@@ -77,10 +77,17 @@ input[type='button']:active, input[type='submit']:active {
     margin: 0 auto;
     line-height: 35px;
     height: 35px;
+}
+
+#header #online{
+    font-size: 11px;
+}
+
+#header #header_login {
     text-align: right;
 }
 
-#header #username {
+#header #header_login #username {
     font-weight: bold;
 }
 

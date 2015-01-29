@@ -2,12 +2,13 @@ package ru.kapahgaiii.qa.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.kapahgaiii.qa.controller.SessionController;
 import ru.kapahgaiii.qa.domain.Message;
 import ru.kapahgaiii.qa.domain.Question;
 import ru.kapahgaiii.qa.domain.User;
 import ru.kapahgaiii.qa.domain.Vote;
 import ru.kapahgaiii.qa.dto.ChatMessage;
-import ru.kapahgaiii.qa.dto.Subscriber;
+import ru.kapahgaiii.qa.core.objects.Subscriber;
 import ru.kapahgaiii.qa.other.VoteType;
 import ru.kapahgaiii.qa.repository.ChatDAO;
 import ru.kapahgaiii.qa.repository.QuestionDAO;
@@ -28,7 +29,9 @@ public class ChatService {
     @Autowired
     private UserDAO userDAO;
 
-    private Map<Question, Set<Subscriber>> subscribedToChat = new HashMap<Question, Set<Subscriber>>();
+    @Autowired
+    SessionController sessionController;
+
 
     public ChatMessage addMessage(Message message) {
         return chatDAO.addMessage(message);
@@ -85,17 +88,8 @@ public class ChatService {
         }
     }
 
-    public void addChatSubscriber(Question question, Subscriber subscriber) {
-        subscribedToChat.putIfAbsent(question, new HashSet<Subscriber>());
-        subscribedToChat.get(question).add(subscriber);
-    }
-
-    public void removeChatSubscriber(Question question, Subscriber subscriber) {
-        subscribedToChat.get(question).remove(subscriber);
-    }
-
     public Set<Subscriber> getChatSubscribers(Question question) {
-        return subscribedToChat.get(question);
+        return sessionController.getChatSubscribers(question);
     }
 
 }
