@@ -60,10 +60,17 @@ function loadPage(url, data) {
     setTitle();
     updateLinks();
     //websocket maintenance
-    if (url.match("^/question")) {
+
+    //alert(url)
+    if (url.match("^/?question")) {
         chat.setUp(url)
     } else if (chat.chatId) {
         chat.finalize();
+    }
+    if (url == "/" || url.match("^/index")) {
+        questions.setUp();
+    } else if (questions.isSet){
+        questions.finalize();
     }
 }
 function setTitle() {
@@ -110,6 +117,96 @@ function connectWebSocket() {
     });
 }
 
+var questions = {
+    subscription: undefined,
+    isSet: false,
+    setUp: function () {
+        questions.subscribe();
+        //load questions
+        $.ajax({
+            type: "GET",
+            url: "/loadQuestions/-1",
+            success: function (response) {
+                questions.showQuestions(response);
+                updateLinks();
+            }
+        });
+        questions.isSet = true;
+    },
+    subscribe: function () {
+        if (stompConnected) {
+            this.messagesSubscription = stompClient.subscribe("/questions", function (message) {
+                var info = JSON.parse(message.body);
+                if (info.type == "subscribers"){
+                    questions.setSubscribers(info.questionId, info.value);
+                }else if (info.type == "messages"){
+                    questions.setMessages(info.questionId, info.value);
+                }
+            });
+        } else { // Please, try again later
+            setTimeout(function () {
+                questions.subscribe();
+            }, 300);
+        }
+    },
+    unsubscribe: function() {
+        if (questions.subscription){
+            questions.subscription.unsubscribe();
+        }
+    },
+    showQuestions: function (list) {
+        $.each(list, function () {
+            questions.showQuestion(this)
+        });
+    },
+    showQuestion: function (q) {
+        if (!q.shown) {
+            q.shown = true;
+            var date = new Date(q.updatedTime);
+            var html = [];
+            var i = 0;
+            html[i++] = "<table class='item' question-id='"+ q.id +"'><tr><td class='votes' rowspan='2'>";
+            html[i++] = "<div class='number'>" + q.votes + "</div>";
+            html[i++] = "<div class='sign'>" + utils.getVotesWord(q.votes) + "</div>";
+            html[i++] = "</td><td class='messages' rowspan='2'>";
+            html[i++] = "<div class='number'>" + q.messages + "</div>";
+            html[i++] = "<div class='sign'>" + utils.getMessagesWord(q.messages) + "</div>";
+            html[i++] = "</td><td class='subscribers' rowspan='2'>";
+            html[i++] = "<div class='number'>" + q.subscribers + "</div>";
+            html[i++] = "<div class='sign'>" + utils.getUsersWord(q.subscribers) + "</div>";
+            html[i++] = "</td><td class='title' colspan='2'>";
+            html[i++] = "<a href='question?id=" + q.id + "'>" + q.title + "</a>";
+            html[i++] = "</td></tr><tr><td class='tags'>";
+            $.each(q.tags, function () {
+                html[i++] = "<span>" + this.value + "</span> "; // space is important!
+            });
+            html[i++] = "</td><td class='time'>" + utils.formatDate(date) + "</td>";
+            html[i++] = "</tr></table>";
+
+            $("#questions").append(html.join(""));
+        }
+    },
+    setSubscribers: function(questionId, count){
+        var td = $(".item[question-id='"+questionId+"']").find(".subscribers");
+        td.find(".number").text(count);
+        td.find(".sing").text(utils.getUsersWord(count));
+    },
+    setMessages: function(questionId, count){
+        var td = $(".item[question-id='"+questionId+"']").find(".messages");
+        td.find(".number").text(count);
+        td.find(".sing").text(utils.getMessagesWord(count));
+    },
+    setVotes: function(questionId, count){
+        var td = $(".item[question-id='"+questionId+"']").find(".votes");
+        td.find(".number").text(count);
+        td.find(".sing").text(utils.getVotesWord(count));
+    },
+    finalize: function (){
+        questions.unsubscribe();
+        questions.subscription = undefined;
+        questions.isSet = false;
+    }
+};
 var chat = {
     votes: [],
     chatId: undefined,
@@ -123,7 +220,7 @@ var chat = {
     programScroll: false, // true - program scrolling, false - user scrolling (for scroll event)
     subscribedUsers: [],
     setUp: function (url) {
-        var regExp = /^\/question\?id=(.*)/;
+        var regExp = /^\/?question\?id=(.*)/;
         this.chatId = regExp.exec(url)[1];
         chat.subscribe();
         if (loggedIn) {
@@ -270,11 +367,11 @@ var chat = {
     },
     unsubscribe: function () {
         //reverse order important!
-        if (this.eventsSubscription) {
-            this.eventsSubscription.unsubscribe();
+        if (chat.eventsSubscription) {
+            chat.eventsSubscription.unsubscribe();
         }
-        if (this.messagesSubscription) {
-            this.messagesSubscription.unsubscribe();
+        if (chat.messagesSubscription) {
+            chat.messagesSubscription.unsubscribe();
         }
     },
     addMessages: function (msgs) {
@@ -448,22 +545,38 @@ var chat = {
 };
 var utils = {
     formatDate: function (date) {
-        var hh = date.getHours();
-        if (hh < 10) {
-            hh = "0" + hh;
+        var today = new Date();
+        if (date.getDate() == today.getDate() &&
+            date.getMonth() == today.getMonth() &&
+            date.getYear() == today.getYear()) {
+            var hh = date.getHours();
+            if (hh < 10) {
+                hh = "0" + hh;
+            }
+            var mm = date.getMinutes();
+            if (mm < 10) {
+                mm = "0" + mm;
+            }
+            var ss = date.getSeconds();
+            if (ss < 10) {
+                ss = "0" + ss;
+            }
+            return hh + ":" + mm + ":" + ss;
+        } else {
+            var dd = date.getDate();
+            if (dd < 10) {
+                dd = "0" + dd;
+            }
+            var mm = date.getMonth() + 1;
+            if (mm < 10) {
+                mm = "0" + mm;
+            }
+            return dd + "." + mm;
         }
-        var mm = date.getMinutes();
-        if (mm < 10) {
-            mm = "0" + mm;
-        }
-        var ss = date.getSeconds();
-        if (ss < 10) {
-            ss = "0" + ss;
-        }
-        return hh + ":" + mm + ":" + ss;
     },
     getGuestsWord: function (count) {
-        if (count >= 10 && count <= 20) {
+        count = Math.abs(count);
+        if (count % 100 >= 10 && count % 100 <= 20) {
             return " гостей";
         }
         switch (count % 10) {
@@ -478,7 +591,8 @@ var utils = {
         }
     },
     getUsersWord: function (count) {
-        if (count >= 10 && count <= 20) {
+        count = Math.abs(count);
+        if (count % 100 >= 10 && count % 100 <= 20) {
             return " пользователей";
         }
         switch (count % 10) {
@@ -490,6 +604,38 @@ var utils = {
                 return " пользователя";
             default:
                 return " пользователей";
+        }
+    },
+    getVotesWord: function (count) {
+        count = Math.abs(count);
+        if (count % 100 >= 10 && count % 100 <= 20) {
+            return " голосов";
+        }
+        switch (count % 10) {
+            case 1:
+                return " голос";
+            case 2:
+            case 3:
+            case 4:
+                return " голоса";
+            default:
+                return " голосов";
+        }
+    },
+    getMessagesWord: function (count) {
+        count = Math.abs(count);
+        if (count % 100 >= 10 && count % 100 <= 20) {
+            return " сообщений";
+        }
+        switch (count % 10) {
+            case 1:
+                return " сообщение";
+            case 2:
+            case 3:
+            case 4:
+                return " сообщения";
+            default:
+                return " сообщений";
         }
     }
 };

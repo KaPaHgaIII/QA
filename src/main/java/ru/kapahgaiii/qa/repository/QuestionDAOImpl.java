@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 import ru.kapahgaiii.qa.domain.Question;
 
 import javax.transaction.Transactional;
+import java.sql.Timestamp;
 import java.util.List;
 
 @Repository
@@ -17,8 +18,12 @@ public class QuestionDAOImpl implements QuestionDAO {
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<Question> getQuestionsList() {
-        return sessionFactory.getCurrentSession().createQuery("from Question").list();
+    public List<Question> getQuestionsList(Timestamp time) {
+//        return sessionFactory.getCurrentSession().createQuery("from Question")
+        return sessionFactory.getCurrentSession().createQuery("from Question where updatedTime <= :time")
+                .setParameter("time", time)
+                .setMaxResults(20)
+                .list();
     }
 
     @Override
@@ -29,5 +34,10 @@ public class QuestionDAOImpl implements QuestionDAO {
     @Override
     public void saveQuestion(Question question) {
         sessionFactory.getCurrentSession().save(question);
+    }
+
+    @Override
+    public void updateQuestion(Question question) {
+        sessionFactory.getCurrentSession().merge(question);
     }
 }

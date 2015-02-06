@@ -9,8 +9,9 @@ import ru.kapahgaiii.qa.domain.Message;
 import ru.kapahgaiii.qa.domain.Question;
 import ru.kapahgaiii.qa.domain.User;
 import ru.kapahgaiii.qa.dto.ChatEvent;
-import ru.kapahgaiii.qa.dto.ChatMessage;
+import ru.kapahgaiii.qa.dto.MessageDTO;
 import ru.kapahgaiii.qa.service.ChatService;
+import ru.kapahgaiii.qa.service.SocketService;
 import ru.kapahgaiii.qa.service.UserService;
 
 import java.security.Principal;
@@ -28,18 +29,20 @@ public class WebSocketController {
     @Autowired
     private ChatService chatService;
 
+    @Autowired
+    private SocketService socketService;
+
     @MessageMapping("/chat/messages/{chatId}")
-    public void chatMessage(ChatMessage messageDTO, @DestinationVariable String chatId, Principal principal) {
+    public void chatMessage(MessageDTO messageDTO, @DestinationVariable String chatId, Principal principal) {
         if (principal != null) {
             Question question = chatService.getQuestionById(Integer.parseInt(chatId));
 
             Message message = new Message(question, userService.findByUsername(principal.getName()), messageDTO.getText());
 
-            messageDTO = chatService.addMessage(message);
+            chatService.addMessage(message);
 
-            ChatMessage[] answer = {messageDTO};
-
-            messagingTemplate.convertAndSend("/chat/messages/" + chatId, answer);
+            socketService.sendChatMessage(message);
+            socketService.sendQuestionInfo("messages", question, question.getMessages());
         }
     }
 
@@ -51,18 +54,14 @@ public class WebSocketController {
             if (event.getAction().equals("vote")) {
                 Message message = chatService.getMessage(question, event.getNumber());
                 User user = userService.findByUsername(principal.getName());
-                if(!message.getUser().equals(user)) {
+                if (!message.getUser().equals(user)) {
                     boolean vote = chatService.vote(user, message);
                     event.setResult(vote);
                     event.setUsername(user.getUsername());
-                    messagingTemplate.convertAndSend("/chat/events/" + chatId, event);
+                    socketService.sendChatEvent(chatId, event);
                 }
             }
 
         }
     }
-    /*@MessageMapping("/other")
-    public void pm(Principal principal, HelloMessage message) {
-        messagingTemplate.convertAndSendToUser(principal.getName(), "/pm", new Greeting(message.getName()));
-    }*/
 }

@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.orm.hibernate4.HibernateTransactionManager;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBuilder;
-import ru.kapahgaiii.qa.domain.*;
 
 import javax.sql.DataSource;
 import java.util.Properties;
@@ -40,10 +39,8 @@ public class HibernateConfig {
     public Properties getHibernateProperties() {
         Properties p = new Properties();
         p.put("hibernate.dialect","org.hibernate.dialect.MySQLDialect");
-//        p.put("hibernate.current_session_context_class","thread");
         p.put("hibernate.show_sql","false");
         p.put("hibernate.format_sql", "true");
-//        p.put("hibernate.show_sql", "true");
         return p;
     }
 
@@ -51,8 +48,7 @@ public class HibernateConfig {
     public SessionFactory getSessionFactory() {
         LocalSessionFactoryBuilder sessionBuilder = new LocalSessionFactoryBuilder(getDataSource());
         sessionBuilder.addProperties(getHibernateProperties());
-        sessionBuilder.addAnnotatedClasses(Vote.class, Message.class, Question.class, User.class, UserRole.class);
-//        sessionBuilder.scanPackages("ru.kapahgaiii.qa.domain");
+        sessionBuilder.scanPackages("ru.kapahgaiii.qa.domain");
         return sessionBuilder.buildSessionFactory();
     }
 

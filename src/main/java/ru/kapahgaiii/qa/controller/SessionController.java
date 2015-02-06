@@ -5,7 +5,10 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.socket.messaging.*;
+import org.springframework.web.socket.messaging.SessionConnectEvent;
+import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+import org.springframework.web.socket.messaging.SessionSubscribeEvent;
+import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 import ru.kapahgaiii.qa.core.objects.Session;
 import ru.kapahgaiii.qa.core.objects.Subscriber;
 import ru.kapahgaiii.qa.core.objects.Subscription;
@@ -128,6 +131,7 @@ public class SessionController implements ApplicationListener<ApplicationEvent> 
 
         //send event
         socketService.sendUserSubscribedToChat(question, session.getSubscriber());
+        socketService.sendQuestionInfo("subscribers", question, getChatSubscribersCount(question));
     }
 
     private void unsubscribeFromChat(StompHeaderAccessor headers) {
@@ -146,9 +150,14 @@ public class SessionController implements ApplicationListener<ApplicationEvent> 
         session.removeSubscription(subscription);
         chatSessions.get(question).remove(session);
 
+        //clear
+        if (chatSessions.get(question).isEmpty()) {
+            chatSessions.remove(question);
+        }
+
         //send event
         socketService.sendUserUnsubscribedFromChat(question, session.getSubscriber());
-
+        socketService.sendQuestionInfo("subscribers", question, getChatSubscribersCount(question));
     }
 
     private void removeSession(StompHeaderAccessor headers) {
@@ -164,9 +173,28 @@ public class SessionController implements ApplicationListener<ApplicationEvent> 
         return subscribers;
     }
 
+    //could be slow when many people online
+    public int getChatSubscribersCount(Question question) {
+        if (chatSessions.get(question) == null) {
+            return 0;
+        }
+        int count = 0;
+        Set<String> authorized = new HashSet<String>();
+        for (Session session : chatSessions.get(question)) {
+            Subscriber subscriber = session.getSubscriber();
+            if (subscriber.getUsername() != null) {
+                authorized.add(subscriber.getUsername());
+            } else {
+                count++; //anonymous
+            }
+        }
+        return count + authorized.size();
+
+    }
+
     private void incrementOnline(StompHeaderAccessor headers) {
         if (headers.getUser() != null) {
-            usersOnline.putIfAbsent(headers.getUser().getName(),new AtomicInteger(0));
+            usersOnline.putIfAbsent(headers.getUser().getName(), new AtomicInteger(0));
             usersOnline.get(headers.getUser().getName()).incrementAndGet();
         } else {
             guestsOnline.incrementAndGet();
@@ -176,7 +204,7 @@ public class SessionController implements ApplicationListener<ApplicationEvent> 
 
     private void decrementOnline(StompHeaderAccessor headers) {
         if (sessions.get(headers.getSessionId()).getSubscriber().getUsername() != null) {
-            if (usersOnline.get(headers.getUser().getName()).decrementAndGet() == 0){
+            if (usersOnline.get(headers.getUser().getName()).decrementAndGet() == 0) {
                 usersOnline.remove(headers.getUser().getName());
             }
         } else {

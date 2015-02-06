@@ -5,7 +5,7 @@ import ru.kapahgaiii.qa.domain.Message;
 import java.sql.Timestamp;
 import java.util.Date;
 
-public class ChatMessage {
+public class MessageDTO {
 
     private Integer message_id;
 
@@ -19,10 +19,10 @@ public class ChatMessage {
 
     private Timestamp time = new Timestamp(new Date().getTime());
 
-    public ChatMessage() {
+    public MessageDTO() {
     }
 
-    public ChatMessage(Message message) {
+    public MessageDTO(Message message) {
         this.message_id = message.getMessageId();
         this.number = message.getNumber();
         this.text = message.getText();

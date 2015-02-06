@@ -79,7 +79,7 @@ input[type='button']:active, input[type='submit']:active {
     height: 35px;
 }
 
-#header #online{
+#header #online {
     font-size: 11px;
 }
 
@@ -98,16 +98,73 @@ input[type='button']:active, input[type='submit']:active {
 }
 
 #questions {
-    margin: 10px 0;
+    margin: 15px 0;
 }
 
 #questions .item {
     margin-bottom: 8px;
+    width: 625px;
+    padding: 5px 0;
+    border-bottom: 1px dotted #EEEEEE;
+}
+#questions .item:last-of-type {
+    border-bottom: none;
 }
 
-#questions .item a {
-    font-size: 15px;
+#questions .item .votes, #questions .item .messages, #questions .item .subscribers {
+    text-align: center;
+    color: #778292;
 }
+
+#questions .item .messages {
+    width: 70px;
+}
+
+#questions .item .votes {
+    width: 60px;
+}
+#questions .item .subscribers {
+    width: 80px;
+}
+
+#questions .item .number {
+    font-size: 20px;
+    width: 100%;
+}
+
+#questions .item .sign {
+    font-size: 11px;
+    width: 100%;
+}
+
+#questions .item .title, #questions .item .tags {
+    padding-left: 15px;
+}
+
+#questions .item .title {
+    font-weight: bold;
+    color: #130e5a;
+}
+
+#questions .item .tags span {
+    list-style: none;
+    margin: 2px 0;
+    background-color: #DFE9F0;
+    color: #2A5594;
+    display: inline-block;
+    padding: 2px 4px;
+    white-space: nowrap;
+    font-size: 13px;
+}
+
+#questions .item .time {
+    text-align: right;
+    color: #777777;
+    width: 55px;
+    vertical-align: bottom;
+    font-size: 11px;
+}
+
 
 #question_back {
     display: block;
@@ -147,7 +204,6 @@ input[type='button']:active, input[type='submit']:active {
     overflow-y: hidden;
     border-top: 1px solid #AAAAAA;
     padding-top: 5px;
-    /*box-shadow: inset 1px 1px 1px 1px #777777;*/
 }
 
 #chat_wr #chat_container #chat {

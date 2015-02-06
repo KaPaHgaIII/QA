@@ -4,18 +4,18 @@ import ru.kapahgaiii.qa.domain.Message;
 import ru.kapahgaiii.qa.domain.Question;
 import ru.kapahgaiii.qa.domain.User;
 import ru.kapahgaiii.qa.domain.Vote;
-import ru.kapahgaiii.qa.dto.ChatMessage;
+import ru.kapahgaiii.qa.dto.MessageDTO;
 
 import java.util.List;
 import java.util.Set;
 
 public interface ChatDAO {
 
-    public ChatMessage addMessage(Message message);
+    public void saveMessage(Message message);
 
-    public List<ChatMessage> getMessageDTOs(Question question);
+    public List<MessageDTO> getMessageDTOs(Question question);
 
-    public ChatMessage getMessageDTO(Question question, Integer number);
+    public MessageDTO getMessageDTO(Question question, Integer number);
 
     public Message getMessage(Question question, Integer number);
 

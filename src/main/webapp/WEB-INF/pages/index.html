@@ -19,10 +19,36 @@
 
         <h3>Вопросы:</h3>
 
-        <div id="questions">
-            <div class="item" th:each="q : ${questions}">
-                <a href="question.html" th:href="@{/question(id=${q.getId()})}" th:text="${q.getTitle()}">Текст вопроса</a>
-            </div>
+        <div id="questions" th:remove="body">
+            <table class="item" th:each="q : ${questions}">
+                <tr>
+                    <td class="votes" rowspan="2">
+                        <div class="number">1</div>
+                        <div class="sign">голос</div>
+                    </td>
+                    <td class="messages" rowspan="2">
+                        <div class="number">115</div>
+                        <div class="sign">сообщений</div>
+                    </td>
+                    <td class="subscribers" rowspan="2">
+                        <div class="number">3</div>
+                        <div class="sign">участника</div>
+                    </td>
+                    <td class="title" colspan="2">
+                        <a href="question.html" th:href="@{/question(id=${q.getId()})}" th:text="${q.getTitle()}">Текст
+                            вопроса</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="tags">
+                        <span>информационные технологии</span>
+                        <span>программирование</span>
+                        <span>java</span>
+                        <span>maven</span>
+                    </td>
+                    <td class="time">18:43:47</td>
+                </tr>
+            </table>
         </div>
     </div>
 </div>

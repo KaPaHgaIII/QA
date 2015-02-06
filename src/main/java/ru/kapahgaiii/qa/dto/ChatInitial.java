@@ -3,18 +3,18 @@ package ru.kapahgaiii.qa.dto;
 import ru.kapahgaiii.qa.core.objects.Subscriber;
 
 public class ChatInitial {
-    private ChatMessage[] messages;
+    private MessageDTO[] messages;
     
     private Integer[] votedNumbers;
 
     private Subscriber[] subscribers;
     
 
-    public ChatMessage[] getMessages() {
+    public MessageDTO[] getMessages() {
         return messages;
     }
 
-    public void setMessages(ChatMessage[] messages) {
+    public void setMessages(MessageDTO[] messages) {
         this.messages = messages;
     }
 

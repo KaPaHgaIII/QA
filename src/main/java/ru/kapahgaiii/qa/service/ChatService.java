@@ -3,19 +3,23 @@ package ru.kapahgaiii.qa.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.kapahgaiii.qa.controller.SessionController;
+import ru.kapahgaiii.qa.core.objects.Subscriber;
 import ru.kapahgaiii.qa.domain.Message;
 import ru.kapahgaiii.qa.domain.Question;
 import ru.kapahgaiii.qa.domain.User;
 import ru.kapahgaiii.qa.domain.Vote;
-import ru.kapahgaiii.qa.dto.ChatMessage;
-import ru.kapahgaiii.qa.core.objects.Subscriber;
+import ru.kapahgaiii.qa.dto.MessageDTO;
+import ru.kapahgaiii.qa.dto.QuestionDTO;
 import ru.kapahgaiii.qa.other.VoteType;
 import ru.kapahgaiii.qa.repository.ChatDAO;
 import ru.kapahgaiii.qa.repository.QuestionDAO;
 import ru.kapahgaiii.qa.repository.UserDAO;
 
 import javax.transaction.Transactional;
-import java.util.*;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 @Service("ChatService")
 public class ChatService {
@@ -33,23 +37,21 @@ public class ChatService {
     SessionController sessionController;
 
 
-    public ChatMessage addMessage(Message message) {
-        return chatDAO.addMessage(message);
+    public void addMessage(Message message) {
+        message.getQuestion().incrementMessages();
+        questionDAO.updateQuestion(message.getQuestion());
+        chatDAO.saveMessage(message);
     }
 
     public Question getQuestionById(Integer id) {
         return questionDAO.getQuestionById(id);
     }
 
-    public List<Question> getQuestionsList() {
-        return questionDAO.getQuestionsList();
-    }
-
-    public List<ChatMessage> getMessageDTOsList(Question question) {
+    public List<MessageDTO> getMessageDTOsList(Question question) {
         return chatDAO.getMessageDTOs(question);
     }
 
-    public ChatMessage getMessageDTO(Question question, Integer number) {
+    public MessageDTO getMessageDTO(Question question, Integer number) {
         return chatDAO.getMessageDTO(question, number);
     }
 
@@ -90,6 +92,17 @@ public class ChatService {
 
     public Set<Subscriber> getChatSubscribers(Question question) {
         return sessionController.getChatSubscribers(question);
+    }
+
+    public List<QuestionDTO> getQuestionDTOsList(Timestamp time){
+        List<Question> questions = questionDAO.getQuestionsList(time);
+        List<QuestionDTO> questionDTOs = new ArrayList<QuestionDTO>();
+        for (Question question : questions) {
+            QuestionDTO questionDTO = new QuestionDTO(question);
+            questionDTO.setSubscribers(sessionController.getChatSubscribersCount(question));
+            questionDTOs.add(questionDTO);
+        }
+        return questionDTOs;
     }
 
 }

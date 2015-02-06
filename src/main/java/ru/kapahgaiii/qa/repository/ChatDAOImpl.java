@@ -7,11 +7,14 @@ import ru.kapahgaiii.qa.domain.Message;
 import ru.kapahgaiii.qa.domain.Question;
 import ru.kapahgaiii.qa.domain.User;
 import ru.kapahgaiii.qa.domain.Vote;
-import ru.kapahgaiii.qa.dto.ChatMessage;
+import ru.kapahgaiii.qa.dto.MessageDTO;
 import ru.kapahgaiii.qa.other.VoteType;
 
 import javax.transaction.Transactional;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Repository
 @Transactional
@@ -20,33 +23,32 @@ public class ChatDAOImpl implements ChatDAO {
     @Autowired
     private SessionFactory sessionFactory;
 
-    private Map<Question, List<ChatMessage>> messages = new HashMap<Question, List<ChatMessage>>();
-
     @Override
-    public ChatMessage addMessage(Message message) {
-        Question question = message.getQuestion();
-        if (!messages.containsKey(question)) {
-            loadMessagesFromDB(question);
-        }
+    public void saveMessage(Message message) {
         sessionFactory.getCurrentSession().save(message);
-
-        ChatMessage messageDTO = new ChatMessage(message);
-
-        messages.get(question).add(messageDTO);
-
-        return messageDTO;
     }
 
     @Override
-    public List<ChatMessage> getMessageDTOs(Question question) {
-        if (!messages.containsKey(question)) {
-            loadMessagesFromDB(question);
+    @SuppressWarnings("unchecked")
+    public List<MessageDTO> getMessageDTOs(Question question) {
+        List<Message> messagesList = sessionFactory.getCurrentSession()
+                .createQuery("from Message where question=:question")
+                .setParameter("question", question)
+                .list();
+
+        List<MessageDTO> messageDTOs = new ArrayList<MessageDTO>();
+
+        for (Message message : messagesList) {
+            messageDTOs.add(message.getNumber(), new MessageDTO(message));
         }
-        return messages.get(question);
+
+        Message.setLastNumber(question, messageDTOs.size());
+
+        return messageDTOs;
     }
 
     @Override
-    public ChatMessage getMessageDTO(Question question, Integer number) {
+    public MessageDTO getMessageDTO(Question question, Integer number) {
         return getMessageDTOs(question).get(number);
     }
 
@@ -68,7 +70,6 @@ public class ChatDAOImpl implements ChatDAO {
     @Override
     public void updateMessage(Message message) {
         sessionFactory.getCurrentSession().merge(message);
-        messages.get(message.getQuestion()).set(message.getNumber(), new ChatMessage(message));
     }
 
     @Override
@@ -111,21 +112,4 @@ public class ChatDAOImpl implements ChatDAO {
 
     }
 
-    @SuppressWarnings("unchecked")
-    private void loadMessagesFromDB(Question question) {
-        List<Message> messagesList = sessionFactory.getCurrentSession()
-                .createQuery("from Message where question=:question")
-                .setParameter("question", question)
-                .list();
-
-        List<ChatMessage> messageDTOs = new ArrayList<ChatMessage>();
-
-        for (Message message : messagesList) {
-            messageDTOs.add(message.getNumber(), new ChatMessage(message));
-        }
-
-        Message.setLastNumber(question, messageDTOs.size());
-
-        messages.put(question, messageDTOs);
-    }
 }
