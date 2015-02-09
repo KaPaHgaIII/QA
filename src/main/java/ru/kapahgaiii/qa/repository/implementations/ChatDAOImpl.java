@@ -1,4 +1,4 @@
-package ru.kapahgaiii.qa.repository;
+package ru.kapahgaiii.qa.repository.implementations;
 
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,8 +9,10 @@ import ru.kapahgaiii.qa.domain.User;
 import ru.kapahgaiii.qa.domain.Vote;
 import ru.kapahgaiii.qa.dto.MessageDTO;
 import ru.kapahgaiii.qa.other.VoteType;
+import ru.kapahgaiii.qa.repository.interfaces.ChatDAO;
 
 import javax.transaction.Transactional;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -72,12 +74,54 @@ public class ChatDAOImpl implements ChatDAO {
         sessionFactory.getCurrentSession().merge(message);
     }
 
+
     @Override
     @SuppressWarnings("unchecked")
-    public Vote getUserVote(User user, Message message) {
+    public List<Question> getQuestionsList(Timestamp time) {
+        return sessionFactory.getCurrentSession().createQuery("from Question where updatedTime <= :time")
+                .setParameter("time", time)
+                .setMaxResults(20)
+                .list();
+    }
+
+    @Override
+    public Question getQuestionById(Integer id) {
+        return (Question) sessionFactory.getCurrentSession().get(Question.class, id);
+    }
+
+    @Override
+    public void saveQuestion(Question question) {
+        sessionFactory.getCurrentSession().save(question);
+    }
+
+    @Override
+    public void updateQuestion(Question question) {
+        sessionFactory.getCurrentSession().merge(question);
+    }
+
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Vote getMessageVote(User user, Message message) {
         List<Vote> votes = sessionFactory.getCurrentSession()
                 .createQuery("from Vote where user=:user and message=:message")
                 .setParameter("user", user).setParameter("message", message)
+                .list();
+
+        if (votes.isEmpty()) {
+            return null;
+        } else {
+            return votes.get(0);
+        }
+
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Vote getQuestionVote(User user, Question question) {
+        List<Vote> votes = sessionFactory.getCurrentSession()
+                .createQuery("from Vote where user=:user and question=:question")
+                .setParameter("user", user).setParameter("question", question)
                 .list();
 
         if (votes.isEmpty()) {
@@ -94,13 +138,18 @@ public class ChatDAOImpl implements ChatDAO {
     }
 
     @Override
+    public void updateVote(Vote vote) {
+        sessionFactory.getCurrentSession().merge(vote);
+    }
+
+    @Override
     public void deleteVote(Vote vote) {
         sessionFactory.getCurrentSession().delete(vote);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public Set<Integer> getVotes(Question question, User user) {
+    public Set<Integer> getMessagesUserVotes(Question question, User user) {
         List<Integer> numbers = sessionFactory.getCurrentSession()
                 .createQuery("select m.number from Vote as v left join v.message as m " +
                         "where m.question=:question and v.user=:user and v.voteType=:voteType")
@@ -111,5 +160,6 @@ public class ChatDAOImpl implements ChatDAO {
         return new HashSet<Integer>(numbers);
 
     }
+
 
 }

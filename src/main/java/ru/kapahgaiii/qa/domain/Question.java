@@ -81,6 +81,14 @@ public class Question {
         this.votes = votes;
     }
 
+    public void incrementVotes() {
+        this.votes++;
+    }
+
+    public void decrementVotes() {
+        this.votes--;
+    }
+
     public Integer getMessages() {
         return messages;
     }

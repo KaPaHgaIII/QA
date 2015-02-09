@@ -52,11 +52,16 @@ public class AjaxController {
     }
 
     @RequestMapping("/question")
-    public String content(HttpServletRequest request, @RequestParam int id, Model model) {
+    public String content(HttpServletRequest request, @RequestParam int id, Model model, Principal principal) {
         if (!isAjax(request)) {
             return template(model);
         }
-        model.addAttribute("question", chatService.getQuestionById(id));
+        Question question = chatService.getQuestionById(id);
+        model.addAttribute("question", new QuestionDTO(question, true));
+        if (principal != null) {
+            model.addAttribute("vote",
+                    chatService.getQuestionVote(userService.findByUsername(principal.getName()),question));
+        }
         return "question :: content";
     }
 

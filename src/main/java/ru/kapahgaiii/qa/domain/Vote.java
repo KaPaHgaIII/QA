@@ -25,6 +25,13 @@ public class Vote {
     @JoinColumn(name = "message_id")
     private Message message;
 
+    @ManyToOne
+    @JoinColumn(name = "question_id")
+    private Question question;
+
+    @Column(name = "sign")
+    private Integer sign;
+
     public Integer getVoteId() {
         return voteId;
     }
@@ -55,6 +62,22 @@ public class Vote {
 
     public void setMessage(Message message) {
         this.message = message;
+    }
+
+    public Question getQuestion() {
+        return question;
+    }
+
+    public void setQuestion(Question question) {
+        this.question = question;
+    }
+
+    public Integer getSign() {
+        return sign;
+    }
+
+    public void setSign(Integer sign) {
+        this.sign = sign;
     }
 }
 

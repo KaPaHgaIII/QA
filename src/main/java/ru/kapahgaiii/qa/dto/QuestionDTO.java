@@ -29,15 +29,19 @@ public class QuestionDTO {
     public QuestionDTO() {
     }
 
-    public QuestionDTO(Question question) {
+    public QuestionDTO(Question question, boolean text) {
         this.id = question.getId();
         this.username = question.getUser().getUsername();
         this.title = question.getTitle();
-        this.text = question.getText();
+        this.text = text ? question.getText() : null;
         this.votes = question.getVotes();
         this.messages = question.getMessages();
         this.updatedTime = question.getUpdatedTime();
         this.tags = question.getTags();
+    }
+
+    public QuestionDTO(Question question) {
+        this(question, false);
     }
 
     public Integer getId() {

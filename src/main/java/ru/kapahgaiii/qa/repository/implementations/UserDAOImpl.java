@@ -1,9 +1,10 @@
-package ru.kapahgaiii.qa.repository;
+package ru.kapahgaiii.qa.repository.implementations;
 
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ru.kapahgaiii.qa.domain.User;
+import ru.kapahgaiii.qa.repository.interfaces.UserDAO;
 
 import javax.transaction.Transactional;
 import java.util.List;

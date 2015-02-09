@@ -12,6 +12,8 @@ public class ChatEvent {
 
     private Integer number;
 
+    private Integer value;
+
     private boolean result;
 
     public ChatEvent() {
@@ -43,6 +45,14 @@ public class ChatEvent {
 
     public void setNumber(Integer number) {
         this.number = number;
+    }
+
+    public Integer getValue() {
+        return value;
+    }
+
+    public void setValue(Integer value) {
+        this.value = value;
     }
 
     public boolean isResult() {

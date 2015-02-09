@@ -8,7 +8,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import ru.kapahgaiii.qa.domain.User;
 import ru.kapahgaiii.qa.domain.UserRole;
-import ru.kapahgaiii.qa.repository.UserDAO;
+import ru.kapahgaiii.qa.repository.interfaces.UserDAO;
 
 import java.util.ArrayList;
 import java.util.HashSet;

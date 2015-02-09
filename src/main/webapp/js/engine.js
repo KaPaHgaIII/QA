@@ -69,7 +69,7 @@ function loadPage(url, data) {
     }
     if (url == "/" || url.match("^/index")) {
         questions.setUp();
-    } else if (questions.isSet){
+    } else if (questions.isSet) {
         questions.finalize();
     }
 }
@@ -137,10 +137,12 @@ var questions = {
         if (stompConnected) {
             this.messagesSubscription = stompClient.subscribe("/questions", function (message) {
                 var info = JSON.parse(message.body);
-                if (info.type == "subscribers"){
+                if (info.type == "subscribers") {
                     questions.setSubscribers(info.questionId, info.value);
-                }else if (info.type == "messages"){
+                } else if (info.type == "messages") {
                     questions.setMessages(info.questionId, info.value);
+                } else if (info.type == "votes") {
+                    questions.setVotes(info.questionId, info.value);
                 }
             });
         } else { // Please, try again later
@@ -149,8 +151,8 @@ var questions = {
             }, 300);
         }
     },
-    unsubscribe: function() {
-        if (questions.subscription){
+    unsubscribe: function () {
+        if (questions.subscription) {
             questions.subscription.unsubscribe();
         }
     },
@@ -165,7 +167,7 @@ var questions = {
             var date = new Date(q.updatedTime);
             var html = [];
             var i = 0;
-            html[i++] = "<table class='item' question-id='"+ q.id +"'><tr><td class='votes' rowspan='2'>";
+            html[i++] = "<table class='item' question-id='" + q.id + "'><tr><td class='votes' rowspan='2'>";
             html[i++] = "<div class='number'>" + q.votes + "</div>";
             html[i++] = "<div class='sign'>" + utils.getVotesWord(q.votes) + "</div>";
             html[i++] = "</td><td class='messages' rowspan='2'>";
@@ -186,22 +188,22 @@ var questions = {
             $("#questions").append(html.join(""));
         }
     },
-    setSubscribers: function(questionId, count){
-        var td = $(".item[question-id='"+questionId+"']").find(".subscribers");
+    setSubscribers: function (questionId, count) {
+        var td = $(".item[question-id='" + questionId + "']").find(".subscribers");
         td.find(".number").text(count);
         td.find(".sing").text(utils.getUsersWord(count));
     },
-    setMessages: function(questionId, count){
-        var td = $(".item[question-id='"+questionId+"']").find(".messages");
+    setMessages: function (questionId, count) {
+        var td = $(".item[question-id='" + questionId + "']").find(".messages");
         td.find(".number").text(count);
         td.find(".sing").text(utils.getMessagesWord(count));
     },
-    setVotes: function(questionId, count){
-        var td = $(".item[question-id='"+questionId+"']").find(".votes");
+    setVotes: function (questionId, count) {
+        var td = $(".item[question-id='" + questionId + "']").find(".votes");
         td.find(".number").text(count);
         td.find(".sing").text(utils.getVotesWord(count));
     },
-    finalize: function (){
+    finalize: function () {
         questions.unsubscribe();
         questions.subscription = undefined;
         questions.isSet = false;
@@ -307,6 +309,12 @@ var chat = {
         chatContainer.perfectScrollbar({
             includePadding: true
         });
+        $("#question_vote_up").click(function () {
+            chat.sendQuestionVote(1);
+        });
+        $("#question_vote_down").click(function () {
+            chat.sendQuestionVote(-1);
+        });
     },
     finalize: function () {
         this.unsubscribe();
@@ -330,32 +338,12 @@ var chat = {
                 var event = JSON.parse(message.body);
                 if (event.action == "vote") {
                     chat.receiveVote(event);
+                } else if (event.action == "questionVote") {
+                    chat.receiveQuestionVote(event);
                 } else if (event.action == "subscribe") {
-                    if (!event.subscriber.username) {
-                        event.subscriber.username = "";
-                    }
-                    // init subscribedUsers[] value
-                    if (!chat.subscribedUsers[event.subscriber.username]) {
-                        chat.subscribedUsers[event.subscriber.username] = 0;
-                    }
-                    // count opened pages for username and anonymous for empty username
-                    chat.subscribedUsers[event.subscriber.username]++;
-
-                    if (event.subscriber.username) {
-                        chat.showSubscribed(event.subscriber.username);
-                    }
-                    chat.showAnonymous();
+                    chat.userSubscribed(event);
                 } else if (event.action == "unsubscribe") {
-                    if (!event.subscriber.username) {
-                        event.subscriber.username = "";
-                    }
-                    // count opened pages for username and anonymous for empty username
-                    chat.subscribedUsers[event.subscriber.username]--;
-
-                    if (event.subscriber.username) {
-                        chat.removeSubscribed(event.subscriber.username);
-                    }
-                    chat.showAnonymous();
+                    chat.userUnsubscribed(event);
                 }
 
             });
@@ -512,6 +500,64 @@ var chat = {
         var sign = event.result ? 1 : -1;
         var votes = parseInt(0 + votesCountDOM.html()) + sign;
         votesCountDOM.html(votes == 0 ? "" : votes);
+    },
+    sendQuestionVote: function (value) {
+        if (loggedIn) {
+            if ($("#author").val() != myUsername) {
+                var event = {action: "questionVote", value: value};
+                stompClient.send("/app/chat/events/" + this.chatId, {}, JSON.stringify(event));
+            } else {
+                alert("Нельзя голосовать за свой вопрос"); //todo всплывающее сообщение об ошибке
+            }
+        } else {
+            alert("Вы не авторизированы"); //todo всплывающее сообщение об ошибке
+        }
+    },
+    receiveQuestionVote: function (event) {
+        if (event.username == myUsername) {
+            var buttonUp = $("#question_vote_up");
+            var buttonDown = $("#question_vote_down");
+            if (event.result) {
+                if (event.value > 0) {
+                    buttonUp.addClass("voted");
+                    buttonDown.removeClass("voted");
+                } else {
+                    buttonDown.addClass("voted");
+                    buttonUp.removeClass("voted");
+                }
+            } else {
+                buttonUp.removeClass("voted");
+                buttonDown.removeClass("voted");
+            }
+        }
+        $("#question_votes").text(event.number);
+    },
+    userSubscribed: function (event) {
+        if (!event.subscriber.username) {
+            event.subscriber.username = "";
+        }
+        // init subscribedUsers[] value
+        if (!chat.subscribedUsers[event.subscriber.username]) {
+            chat.subscribedUsers[event.subscriber.username] = 0;
+        }
+        // count opened pages for username and anonymous for empty username
+        chat.subscribedUsers[event.subscriber.username]++;
+        if (event.subscriber.username) {
+            chat.showSubscribed(event.subscriber.username);
+        }
+        chat.showAnonymous();
+    },
+    userUnsubscribed: function (event) {
+        if (!event.subscriber.username) {
+            event.subscriber.username = "";
+        }
+        // count opened pages for username and anonymous for empty username
+        chat.subscribedUsers[event.subscriber.username]--;
+
+        if (event.subscriber.username) {
+            chat.removeSubscribed(event.subscriber.username);
+        }
+        chat.showAnonymous();
     },
     showSubscribed: function (username) {
         //alert("show " + username + ": " + chat.subscribedUsers[username])

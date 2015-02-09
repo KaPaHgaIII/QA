@@ -3,7 +3,6 @@ package ru.kapahgaiii.qa.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import ru.kapahgaiii.qa.domain.Message;
 import ru.kapahgaiii.qa.domain.Question;
@@ -22,9 +21,6 @@ public class WebSocketController {
 
     @Autowired
     private UserService userService;
-
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
 
     @Autowired
     private ChatService chatService;
@@ -59,6 +55,16 @@ public class WebSocketController {
                     event.setResult(vote);
                     event.setUsername(user.getUsername());
                     socketService.sendChatEvent(chatId, event);
+                }
+            } else if (event.getAction().equals("questionVote")) {
+                User user = userService.findByUsername(principal.getName());
+                if (!question.getUser().equals(user)) {
+                    boolean vote = chatService.vote(user, question, event.getValue());
+                    event.setResult(vote);
+                    event.setUsername(user.getUsername());
+                    event.setNumber(question.getVotes());
+                    socketService.sendChatEvent(chatId, event);
+                    socketService.sendQuestionInfo("votes", question, question.getVotes());
                 }
             }
 

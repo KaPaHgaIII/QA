@@ -146,7 +146,7 @@ input[type='button']:active, input[type='submit']:active {
     color: #130e5a;
 }
 
-#questions .item .tags span {
+#questions .item .tags span, #question_tags span {
     list-style: none;
     margin: 2px 0;
     background-color: #DFE9F0;
@@ -186,11 +186,68 @@ input[type='button']:active, input[type='submit']:active {
     font-weight: normal !important;
 }
 
+#question_info {
+    width: 625px;
+}
+
+#question_title {
+    width: 625px;
+    color: #130e5a;
+    font-weight: bold;
+    font-size: 20px;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    padding-bottom: 10px;
+}
+
+#question_vote {
+    padding-right: 10px;
+    vertical-align: top;
+}
+
+#question_vote_up, #question_vote_down {
+    width: 22px;
+    height: 22px;
+    background: url('images/question_vote.png') no-repeat;
+    cursor: pointer;
+}
+
+#question_vote_up {
+    background-position: 0 0;
+}
+#question_vote_up:hover, #question_vote_up.voted {
+    background-position: -22px 0;
+}
+
+#question_vote_down {
+    background-position: 0 -22px;
+}
+
+#question_vote_down:hover, #question_vote_down.voted {
+    background-position: -22px -22px;
+}
+
+#question_votes {
+    font-size: 20px;
+    text-align: center;
+}
+
 #question_text {
     width: 625px;
     overflow-wrap: break-word;
     word-wrap: break-word;
     margin-top: 15px;
+    vertical-align: top;
+}
+
+#question_tags {
+    vertical-align: bottom;
+}
+
+#question_author {
+    font-size: 13px;
+    font-weight: bold;
+    vertical-align: bottom;
+    width: 1px;
 }
 
 #chat_wr {
@@ -216,7 +273,7 @@ input[type='button']:active, input[type='submit']:active {
 
 #chat_wr #message_input {
     margin-top: 10px;
-    width: 512px;
+    width: 525px;
 }
 
 #chat_wr #send_message_button {

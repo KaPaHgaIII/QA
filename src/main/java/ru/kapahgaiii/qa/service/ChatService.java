@@ -11,9 +11,8 @@ import ru.kapahgaiii.qa.domain.Vote;
 import ru.kapahgaiii.qa.dto.MessageDTO;
 import ru.kapahgaiii.qa.dto.QuestionDTO;
 import ru.kapahgaiii.qa.other.VoteType;
-import ru.kapahgaiii.qa.repository.ChatDAO;
-import ru.kapahgaiii.qa.repository.QuestionDAO;
-import ru.kapahgaiii.qa.repository.UserDAO;
+import ru.kapahgaiii.qa.repository.interfaces.ChatDAO;
+import ru.kapahgaiii.qa.repository.interfaces.UserDAO;
 
 import javax.transaction.Transactional;
 import java.sql.Timestamp;
@@ -23,9 +22,6 @@ import java.util.Set;
 
 @Service("ChatService")
 public class ChatService {
-
-    @Autowired
-    private QuestionDAO questionDAO;
 
     @Autowired
     private ChatDAO chatDAO;
@@ -39,12 +35,12 @@ public class ChatService {
 
     public void addMessage(Message message) {
         message.getQuestion().incrementMessages();
-        questionDAO.updateQuestion(message.getQuestion());
+        chatDAO.updateQuestion(message.getQuestion());
         chatDAO.saveMessage(message);
     }
 
     public Question getQuestionById(Integer id) {
-        return questionDAO.getQuestionById(id);
+        return chatDAO.getQuestionById(id);
     }
 
     public List<MessageDTO> getMessageDTOsList(Question question) {
@@ -60,32 +56,34 @@ public class ChatService {
     }
 
     public Set<Integer> getVotes(Question question, User user) {
-        return chatDAO.getVotes(question, user);
+        return chatDAO.getMessagesUserVotes(question, user);
 
     }
 
     @Transactional
     public boolean vote(User user, Message message) {
-        Vote vote = chatDAO.getUserVote(user, message);
+        Vote vote = chatDAO.getMessageVote(user, message);
         if (vote == null) {
             vote = new Vote();
             vote.setUser(user);
             vote.setMessage(message);
             vote.setVoteType(VoteType.MESSAGE);
 
-            user.addReputation(1);
-            message.addVotes(1);
+            User author = message.getUser();
+            author.addReputation(2);
+            message.incrementVotes();
 
             chatDAO.updateMessage(message);
             chatDAO.saveVote(vote);
-            userDAO.updateUser(user);
+            userDAO.updateUser(author);
             return true;
         } else {
-            message.addVotes(-1);
-            user.addReputation(-1);
+            message.decrementVotes();
+            User author = message.getUser();
+            author.addReputation(-2);
             chatDAO.updateMessage(message);
             chatDAO.deleteVote(vote);
-            userDAO.updateUser(user);
+            userDAO.updateUser(author);
             return false;
         }
     }
@@ -94,8 +92,8 @@ public class ChatService {
         return sessionController.getChatSubscribers(question);
     }
 
-    public List<QuestionDTO> getQuestionDTOsList(Timestamp time){
-        List<Question> questions = questionDAO.getQuestionsList(time);
+    public List<QuestionDTO> getQuestionDTOsList(Timestamp time) {
+        List<Question> questions = chatDAO.getQuestionsList(time);
         List<QuestionDTO> questionDTOs = new ArrayList<QuestionDTO>();
         for (Question question : questions) {
             QuestionDTO questionDTO = new QuestionDTO(question);
@@ -103,6 +101,56 @@ public class ChatService {
             questionDTOs.add(questionDTO);
         }
         return questionDTOs;
+    }
+
+    @Transactional
+    public boolean vote(User user, Question question, int sign) {
+        Vote vote = chatDAO.getQuestionVote(user, question);
+        User author = question.getUser();
+        if (vote == null) { //adding vote
+            vote = new Vote();
+            vote.setVoteType(VoteType.QUESTION);
+            vote.setQuestion(question);
+            vote.setSign(sign);
+            vote.setUser(user);
+
+            author.addReputation(10 * sign);
+
+            if (sign > 0) {
+                question.incrementVotes();
+            } else {
+                question.decrementVotes();
+            }
+
+            chatDAO.saveVote(vote);
+        } else if (vote.getSign() != sign) { //changing vote
+            if (sign > 0) {
+                question.incrementVotes();
+                question.incrementVotes();
+            } else {
+                question.decrementVotes();
+                question.decrementVotes();
+            }
+            vote.setSign(sign);
+            author.addReputation(20 * sign);
+            chatDAO.updateVote(vote);
+        } else { //deleting vote
+            if (vote.getSign() > 0) {
+                question.decrementVotes();
+            } else {
+                question.incrementVotes();
+            }
+            author.addReputation(-10 * vote.getSign());
+            chatDAO.deleteVote(vote);
+            vote = null;
+        }
+        chatDAO.updateQuestion(question);
+        userDAO.updateUser(author);
+        return vote != null;
+    }
+
+    public Vote getQuestionVote(User user, Question question) {
+        return chatDAO.getQuestionVote(user, question);
     }
 
 }

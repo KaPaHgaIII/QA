@@ -1,4 +1,4 @@
-package ru.kapahgaiii.qa.repository;
+package ru.kapahgaiii.qa.repository.interfaces;
 
 import ru.kapahgaiii.qa.domain.Question;
 

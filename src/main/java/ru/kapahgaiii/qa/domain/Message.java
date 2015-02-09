@@ -104,8 +104,12 @@ public class Message {
         this.votes = votes;
     }
 
-    public void addVotes(int value) {
-        votes += value;
+    public void incrementVotes() {
+        votes++;
+    }
+
+    public void decrementVotes() {
+        votes--;
     }
 
     public static void setLastNumber(Question question, Integer number) {
