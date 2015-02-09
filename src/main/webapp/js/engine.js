@@ -191,17 +191,17 @@ var questions = {
     setSubscribers: function (questionId, count) {
         var td = $(".item[question-id='" + questionId + "']").find(".subscribers");
         td.find(".number").text(count);
-        td.find(".sing").text(utils.getUsersWord(count));
+        td.find(".sign").text(utils.getUsersWord(count));
     },
     setMessages: function (questionId, count) {
         var td = $(".item[question-id='" + questionId + "']").find(".messages");
         td.find(".number").text(count);
-        td.find(".sing").text(utils.getMessagesWord(count));
+        td.find(".sign").text(utils.getMessagesWord(count));
     },
     setVotes: function (questionId, count) {
         var td = $(".item[question-id='" + questionId + "']").find(".votes");
         td.find(".number").text(count);
-        td.find(".sing").text(utils.getVotesWord(count));
+        td.find(".sign").text(utils.getVotesWord(count));
     },
     finalize: function () {
         questions.unsubscribe();
