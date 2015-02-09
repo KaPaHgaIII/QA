@@ -507,10 +507,10 @@ var chat = {
                 var event = {action: "questionVote", value: value};
                 stompClient.send("/app/chat/events/" + this.chatId, {}, JSON.stringify(event));
             } else {
-                alert("Нельзя голосовать за свой вопрос"); //todo всплывающее сообщение об ошибке
+                message.showError("Нельзя голосовать за свой вопрос");
             }
         } else {
-            alert("Вы не авторизированы"); //todo всплывающее сообщение об ошибке
+            message.showError("Вы не авторизированы");
         }
     },
     receiveQuestionVote: function (event) {
@@ -682,6 +682,43 @@ var utils = {
                 return " сообщения";
             default:
                 return " сообщений";
+        }
+    }
+};
+
+var message = {
+    headerDOM: undefined,
+    hideTimeout: undefined,
+    opa: 100,
+    x: 1,
+    showError: function (text) {
+        var messageDOM = $("#message");
+        messageDOM.text(text);
+        messageDOM.removeClass("success");
+        messageDOM.addClass("error");
+        this.prepareHide();
+    },
+    showSuccess: function (text) {
+        var messageDOM = $("#message");
+        messageDOM.text(text);
+        messageDOM.removeClass("error");
+        messageDOM.addClass("success");
+        this.prepareHide();
+    },
+    prepareHide: function () {
+        this.headerDOM = $("#header_wr");
+        this.headerDOM.css("opacity", "0");
+        this.opa = 0;
+        this.x = 1;
+        clearTimeout(message.hideTimeout);
+        this.hideTimeout = setTimeout(message.hide, 1000);
+    },
+    hide: function () {
+        message.opa = message.opa + message.x;
+        message.x = message.x * 1.3;
+        message.headerDOM.css("opacity", message.opa / 100);
+        if (message.opa < 100) {
+            message.hideTimeout = setTimeout(message.hide, 50)
         }
     }
 };
