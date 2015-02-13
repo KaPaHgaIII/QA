@@ -61,7 +61,6 @@ function loadPage(url, data) {
     updateLinks();
     //websocket maintenance
 
-    //alert(url)
     if (url.match("^/?question")) {
         chat.setUp(url)
     } else if (chat.chatId) {
@@ -81,13 +80,16 @@ function setTitle() {
 //add click event listener to <a> tags
 function updateLinks() {
     $.each($("a"), function () {
-        this.addEventListener("click", function (e) {
+        this.addEventListener("click", function (event) {
+            if (event.which == 2) {
+                return true;
+            }
             var url = $(this).attr("href"); //get url
             if (url != "/login") {
                 history.pushState(null, null, url); //update address bar
             }
             getPage(url); //load page
-            e.preventDefault(); //prevent following the link
+            event.preventDefault(); //prevent following the link
         }, true);
     });
 }
@@ -118,17 +120,18 @@ function connectWebSocket() {
 }
 
 var questions = {
+    loaded: [],
+    shown: [],
+    earliestTime: new Date().getTime() + 86400000, // 100% max, timezones taken into account
+    earliestIds: [], // we need to keep them to avoid reloading already loaded questions
     subscription: undefined,
     isSet: false,
     setUp: function () {
         questions.subscribe();
-        //load questions
-        $.ajax({
-            type: "GET",
-            url: "/loadQuestions/-1",
-            success: function (response) {
-                questions.showQuestions(response);
-                updateLinks();
+        questions.loadQuestions(questions.earliestTime);
+        $(window).scroll(function () {
+            if ($(document).height() - ($(window).scrollTop() + $(window).height()) < 100) {
+                questions.loadMore();
             }
         });
         questions.isSet = true;
@@ -156,14 +159,41 @@ var questions = {
             questions.subscription.unsubscribe();
         }
     },
-    showQuestions: function (list) {
-        $.each(list, function () {
-            questions.showQuestion(this)
+    loadQuestions: function (time) {
+        $.ajax({
+            type: "POST",
+            url: "/loadQuestions/" + time,
+            data: {exclude: questions.earliestIds},
+            success: function (response) {
+                questions.addQuestions(response);
+                questions.showQuestions();
+            }
         });
     },
+    loadMore: function () {
+        questions.loadQuestions(questions.earliestTime);
+    },
+    addQuestions: function (list) {
+        $.each(list, function () {
+            var q = this;
+            questions.loaded.push(q);
+            if (q.updatedTime != questions.earliestTime) {
+                questions.earliestIds = [];
+            }
+            questions.earliestIds.push(q.id);
+            questions.earliestTime = Math.min(questions.earliestTime, q.updatedTime);
+        });
+        questions.sort();
+    },
+    showQuestions: function () {
+        for (var i = 0; i < questions.loaded.length; i++) {
+            questions.showQuestion(questions.loaded[i]);
+        }
+        updateLinks();
+    },
     showQuestion: function (q) {
-        if (!q.shown) {
-            q.shown = true;
+        if (!questions.shown[q.id]) {
+            questions.shown[q.id] = true;
             var date = new Date(q.updatedTime);
             var html = [];
             var i = 0;
@@ -207,6 +237,14 @@ var questions = {
         questions.unsubscribe();
         questions.subscription = undefined;
         questions.isSet = false;
+    },
+    sort: function () {
+        questions.loaded.sort(function (a, b) {
+            if (isNaN(a.updatedTime) || isNaN(b.updatedTime)) {
+                return a.updatedTime < b.updatedTime ? 1 : -1;
+            }
+            return b.updatedTime - a.updatedTime;
+        });
     }
 };
 var chat = {
@@ -560,7 +598,6 @@ var chat = {
         chat.showAnonymous();
     },
     showSubscribed: function (username) {
-        //alert("show " + username + ": " + chat.subscribedUsers[username])
         if (chat.subscribedUsers[username] == 1) {
             $("#users_in_chat .anon_users").before("<li username='" + username + "'>" + username + "</li>")
         }
@@ -683,6 +720,15 @@ var utils = {
             default:
                 return " сообщений";
         }
+    },
+    sort: function (arr) {
+        arr.sort(function (a, b) {
+            if (isNaN(a) || isNaN(b)) {
+                return a > b ? 1 : -1;
+            }
+            return a - b;
+        });
+        return arr;
     }
 };
 

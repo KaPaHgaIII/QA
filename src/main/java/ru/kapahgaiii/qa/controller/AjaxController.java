@@ -3,23 +3,16 @@ package ru.kapahgaiii.qa.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import ru.kapahgaiii.qa.core.objects.Subscriber;
 import ru.kapahgaiii.qa.domain.Question;
-import ru.kapahgaiii.qa.dto.ChatInitial;
-import ru.kapahgaiii.qa.dto.MessageDTO;
-import ru.kapahgaiii.qa.dto.Online;
-import ru.kapahgaiii.qa.dto.QuestionDTO;
+import ru.kapahgaiii.qa.dto.*;
 import ru.kapahgaiii.qa.service.ChatService;
 import ru.kapahgaiii.qa.service.UserService;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
 import java.sql.Timestamp;
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -112,11 +105,10 @@ public class AjaxController {
     @RequestMapping("/loadQuestions/{time}")
     public
     @ResponseBody
-    QuestionDTO[] getQuestions(@PathVariable(value = "time") Long time) {
-        time = time < 0 ? (new Date()).getTime() : time;
-        List<QuestionDTO> questions = chatService.getQuestionDTOsList(new Timestamp(time));
+    QuestionDTO[] getQuestions(@PathVariable(value = "time") Long time,
+                               @RequestParam(value = "exclude[]", required = false) Integer[] exclude) {
+        List<QuestionDTO> questions = chatService.getQuestionDTOsList(new Timestamp(time), exclude);
         return questions.toArray(new QuestionDTO[questions.size()]);
-//        return new Question[0];
     }
 
     private boolean isAjax(HttpServletRequest request) {

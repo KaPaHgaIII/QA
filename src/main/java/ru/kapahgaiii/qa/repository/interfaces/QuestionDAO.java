@@ -9,7 +9,7 @@ public interface QuestionDAO {
 
     public Question getQuestionById(Integer id);
 
-    public List<Question> getQuestionsList(Timestamp time);
+    public List<Question> getQuestionsList(Timestamp time, Integer[] exclude);
 
     public void saveQuestion(Question question);
 

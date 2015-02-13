@@ -92,8 +92,8 @@ public class ChatService {
         return sessionController.getChatSubscribers(question);
     }
 
-    public List<QuestionDTO> getQuestionDTOsList(Timestamp time) {
-        List<Question> questions = chatDAO.getQuestionsList(time);
+    public List<QuestionDTO> getQuestionDTOsList(Timestamp time, Integer[] exclude) {
+        List<Question> questions = chatDAO.getQuestionsList(time, exclude);
         List<QuestionDTO> questionDTOs = new ArrayList<QuestionDTO>();
         for (Question question : questions) {
             QuestionDTO questionDTO = new QuestionDTO(question);

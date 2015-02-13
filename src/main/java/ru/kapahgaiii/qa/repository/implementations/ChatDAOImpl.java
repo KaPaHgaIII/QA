@@ -77,10 +77,20 @@ public class ChatDAOImpl implements ChatDAO {
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<Question> getQuestionsList(Timestamp time) {
-        return sessionFactory.getCurrentSession().createQuery("from Question where updatedTime <= :time")
+    public List<Question> getQuestionsList(Timestamp time, Integer[] exclude) {
+        int limit = 15;
+        if (exclude == null){
+            return sessionFactory.getCurrentSession()
+                    .createQuery("from Question where updatedTime <= :time order by updatedTime desc")
+                    .setParameter("time", time)
+                    .setMaxResults(limit)
+                    .list();
+        }
+        return sessionFactory.getCurrentSession()
+                .createQuery("from Question where updatedTime <= :time and id not in (:ids) order by updatedTime desc")
                 .setParameter("time", time)
-                .setMaxResults(20)
+                .setParameterList("ids", exclude)
+                .setMaxResults(limit)
                 .list();
     }
 
