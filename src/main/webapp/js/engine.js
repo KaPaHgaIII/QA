@@ -237,6 +237,11 @@ var questions = {
         questions.unsubscribe();
         questions.subscription = undefined;
         questions.isSet = false;
+        questions.loaded = [];
+        questions.shown = [];
+        questions.earliestTime = new Date().getTime() + 86400000;
+        questions.earliestIds = [];
+        $(window).off("scroll");
     },
     sort: function () {
         questions.loaded.sort(function (a, b) {
