@@ -2,6 +2,7 @@ var stompClient = null;
 var stompConnected = false;
 var sessionId = null;
 var onlineSubscription = null;
+var lol = 0;
 //CSRF
 $(function () {
     var token = $("meta[name='_csrf']").attr("content");
@@ -80,17 +81,20 @@ function setTitle() {
 //add click event listener to <a> tags
 function updateLinks() {
     $.each($("a"), function () {
-        this.addEventListener("click", function (event) {
-            if (event.which == 2) {
-                return true;
-            }
-            var url = $(this).attr("href"); //get url
-            if (url != "/login") {
-                history.pushState(null, null, url); //update address bar
-            }
-            getPage(url); //load page
-            event.preventDefault(); //prevent following the link
-        }, true);
+        var a = this;
+        if (!($._data(a, "events") && $._data(a, "events")['click'])) {
+            $(a).click(function (event) {
+                if (event.which == 2) {
+                    return true;
+                }
+                var url = $(a).attr("href"); //get url
+                if (url != "/login") {
+                    history.pushState(null, null, url); //update address bar
+                }
+                getPage(url); //load page
+                event.preventDefault(); //prevent following the link
+            });
+        }
     });
 }
 function showOnline(users, guests) {
@@ -161,7 +165,7 @@ var questions = {
     },
     loadQuestions: function (time) {
         $.ajax({
-            type: "POST",
+            type: "GET",
             url: "/loadQuestions/" + time,
             data: {exclude: questions.earliestIds},
             success: function (response) {
