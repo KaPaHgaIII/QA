@@ -48,23 +48,27 @@ input[type='text'], input[type='password'] {
 }
 
 input[type='button'], input[type='submit'] {
-    background-color: #FFFFFF;
+    background-color: #6474a5;
+    color: #EEEEEE;
+    border-radius: 1px;
     box-shadow: 1px 1px 1px 1px #777777;
     min-width: 80px;
     font-size: 14px;
-    line-height: 26px;
+    line-height: 20px;
     font-family: Arial, Helvetica, sans-serif;
-    height: 26px;
+    height: 20px;
+    padding: 0 3px;
 }
 
 input[type='button']:hover, input[type='submit']:hover {
-    background-color: #FFFFFF;
     box-shadow: 1px 1px 1px 1px #333333;
 }
 
 input[type='button']:active, input[type='submit']:active {
-    background-color: #FFFFFF;
     box-shadow: inset 1px 1px 1px 1px #777777;
+}
+input[type='button']:disabled, input[type='submit']:disabled {
+    color: #909090;
 }
 
 #header_wr {
@@ -88,9 +92,11 @@ input[type='button']:active, input[type='submit']:active {
     line-height: 38px;
     font-size: 18px;
 }
+
 #message.error {
     background-color: #CB908F;
 }
+
 #message.success {
     background-color: #8CB68F;
 }
@@ -120,6 +126,14 @@ input[type='button']:active, input[type='submit']:active {
     padding: 20px 0;
 }
 
+#questions_top {
+    width: 625px;
+}
+
+#questions_top #refresh {
+    text-align: right;
+}
+
 #questions {
     margin: 15px 0;
 }
@@ -130,6 +144,7 @@ input[type='button']:active, input[type='submit']:active {
     padding: 5px 0;
     border-bottom: 1px dotted #EEEEEE;
 }
+
 #questions .item:last-of-type {
     border-bottom: none;
 }
@@ -146,6 +161,7 @@ input[type='button']:active, input[type='submit']:active {
 #questions .item .votes {
     width: 60px;
 }
+
 #questions .item .subscribers {
     width: 80px;
 }
@@ -188,24 +204,21 @@ input[type='button']:active, input[type='submit']:active {
     font-size: 11px;
 }
 
-
 #question_back {
     display: block;
     margin-bottom: 15px;
 }
 
 #users_in_chat {
-    float: right;
-}
-
-#users_in_chat ul li {
-    list-style: none;
-    font-weight: bold;
     font-size: 12px;
-
+    padding-top: 7px;
 }
 
-#users_in_chat ul li.anon_users {
+#users_in_chat span {
+    font-weight: bold;
+}
+
+#users_in_chat span.anon_users {
     font-weight: normal !important;
 }
 
@@ -237,6 +250,7 @@ input[type='button']:active, input[type='submit']:active {
 #question_vote_up {
     background-position: 0 0;
 }
+
 #question_vote_up:hover, #question_vote_up.voted {
     background-position: -22px 0;
 }
@@ -274,7 +288,7 @@ input[type='button']:active, input[type='submit']:active {
 }
 
 #chat_wr {
-    margin-top: 15px;
+    margin-top: 5px;
 }
 
 #chat_wr #chat_container {
@@ -304,6 +318,8 @@ input[type='button']:active, input[type='submit']:active {
     position: relative;
     top: 10px;
     width: 80px;
+    height: 26px;
+    line-height: 26px;
 }
 
 #chat_wr #chat .message {

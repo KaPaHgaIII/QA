@@ -608,12 +608,12 @@ var chat = {
     },
     showSubscribed: function (username) {
         if (chat.subscribedUsers[username] == 1) {
-            $("#users_in_chat .anon_users").before("<li username='" + username + "'>" + username + "</li>")
+            $("#users_in_chat .anon_users").before(" <span username='" + username + "'>" + username + "</span> ")
         }
     },
     removeSubscribed: function (username) {
         if (chat.subscribedUsers[username] == 0) {
-            $("#users_in_chat li[username='" + username + "']").remove();
+            $("#users_in_chat span[username='" + username + "']").remove();
         }
     },
     showAnonymous: function () {

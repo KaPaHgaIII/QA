@@ -33,15 +33,7 @@
         <input type="hidden" th:value="${question.getUsername()}" value="author" id="author">
         <a href="index.html" th:href="@{/}" id="question_back">Назад к списку вопросов</a>
 
-        <div id="users_in_chat">
-            Вопрос просматривают:
-            <ul>
-                <li class="anon_users"></li>
-            </ul>
-        </div>
-
-
-        <table id="question_info">
+                <table id="question_info">
             <tr>
                 <td colspan="2" id="question_title" th:text="${question.getTitle()}">Какой здесь будет заголовок?</td>
             </tr>
@@ -64,6 +56,9 @@
                     <span th:each="tag : ${question.getTags()}" th:text="${tag.getValue()}">теги</span>
                 </td>
                 <td id="question_author" th:text="${question.getUsername()}">Автор</td>
+            </tr>
+            <tr>
+                <td colspan="3" id="users_in_chat">В обсуждении <span class="anon_users"></span></td>
             </tr>
         </table>
         <div>
