@@ -17,7 +17,13 @@
     <div id="content" th:fragment="content">
         <input type="hidden" value="Вопрос-Ответ 2.0" id="title">
 
-        <h3>Вопросы:</h3>
+        <table id="questions_top">
+            <tr>
+                <td><h3>Вопросы:</h3></td>
+                <td id="refresh"><input type="button" value="Обновить список"></td>
+            </tr>
+        </table>
+
 
         <div id="questions" th:remove="body">
             <table class="item" th:each="q : ${questions}">
