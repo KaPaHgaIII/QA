@@ -1,149 +1,303 @@
--- MySQL dump 10.13  Distrib 5.6.17, for Win32 (x86)
---
--- Host: localhost    Database: qa
--- ------------------------------------------------------
--- Server version	5.6.22-log
+USE [qa]
+GO
+/****** Object:  Schema [m2ss]    Script Date: 15.02.2015 23:42:43 ******/
+CREATE SCHEMA [m2ss]
+GO
+/****** Object:  StoredProcedure [dbo].[vote_message]    Script Date: 15.02.2015 23:42:43 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[vote_message]
+@uid INT,
+@message_id INT
+AS
+BEGIN
+-- SET NOCOUNT ON added to prevent extra result sets from
+-- interfering with SELECT statements.
+SET NOCOUNT ON;
+DECLARE @result INT;
+DECLARE @votes INT;
+IF ((SELECT COUNT(vote_id) FROM dbo.votes WHERE uid=@uid AND message_id=@message_id AND vote_type='MESSAGE')=0)
+BEGIN
+INSERT INTO dbo.votes (uid, vote_type, message_id) VALUES (@uid, 'MESSAGE', @message_id);
+SET @result = 1;
+END
+ELSE
+BEGIN
+DELETE FROM dbo.votes
+WHERE uid = @uid AND message_id = @message_id AND vote_type = 'MESSAGE';
+SET @result = 0;
+END
+SET @votes = (SELECT votes
+              FROM messages
+              WHERE message_id = @message_id);
+SELECT
+  @result AS result,
+  @votes  AS votes;
+END
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+GO
+/****** Object:  StoredProcedure [dbo].[vote_question]    Script Date: 15.02.2015 23:42:43 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[vote_question]
+@uid INT,
+@question_id INT,
+@sign INT
+AS
+BEGIN
+-- SET NOCOUNT ON added to prevent extra result sets from
+-- interfering with SELECT statements.
+SET NOCOUNT ON;
+DECLARE @result INT;
+DECLARE @votes INT;
+IF ((SELECT COUNT(vote_id) FROM dbo.votes WHERE uid=@uid AND question_id=@question_id AND vote_type='QUESTION')=0)
+BEGIN
+INSERT INTO dbo.votes (uid, vote_type, question_id, sign) VALUES (@uid, 'QUESTION', @question_id, @sign);
+SET @result = 1;
+END
+ELSE
+BEGIN
+DECLARE @old_sign INT;
+SET @old_sign = (SELECT sign
+                 FROM dbo.votes
+                 WHERE uid = @uid AND question_id = @question_id AND vote_type = 'QUESTION');
 
---
--- Table structure for table `messages`
---
+IF (@old_sign = @sign)
+BEGIN
+DELETE FROM dbo.votes
+WHERE uid = @uid AND question_id = @question_id AND vote_type = 'QUESTION';
+SET @result = 0;
+END
+ELSE
+BEGIN
+UPDATE dbo.votes
+SET sign = @sign
+WHERE uid = @uid AND question_id = @question_id AND vote_type = 'QUESTION';
+SET @result = 1;
+END
+END
+SET @votes = (SELECT votes
+              FROM questions
+              WHERE question_id = @question_id);
+SELECT
+  @result AS result,
+  @votes  AS votes;
+END
 
-DROP TABLE IF EXISTS `messages`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `messages` (
-  `message_id` int(20) NOT NULL AUTO_INCREMENT,
-  `uid` int(10) NOT NULL,
-  `question_id` int(18) NOT NULL,
-  `number` int(5) NOT NULL,
-  `text` text NOT NULL,
-  `votes` int(6) DEFAULT '0',
-  `time` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`message_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=47 DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
+GO
+/****** Object:  UserDefinedFunction [dbo].[enum2str$votes$vote_type]    Script Date: 15.02.2015 23:42:43 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE FUNCTION [dbo].[enum2str$votes$vote_type]
+(
+@setval TINYINT
+)
+RETURNS nvarchar(max)
+AS
+BEGIN
+RETURN
+CASE @setval
+WHEN 1 THEN 'MESSAGE'
+WHEN 2 THEN 'QUESTION'
+ELSE ''
+END
+END
+GO
+/****** Object:  UserDefinedFunction [dbo].[norm_enum$votes$vote_type]    Script Date: 15.02.2015 23:42:43 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE FUNCTION [dbo].[norm_enum$votes$vote_type]
+(
+@setval nvarchar(max)
+)
+RETURNS nvarchar(max)
+AS
+BEGIN
+RETURN dbo.enum2str$votes$vote_type(dbo.str2enum$votes$vote_type(@setval))
+END
+GO
+/****** Object:  UserDefinedFunction [dbo].[str2enum$votes$vote_type]    Script Date: 15.02.2015 23:42:43 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE FUNCTION [dbo].[str2enum$votes$vote_type]
+(
+@setval nvarchar(max)
+)
+RETURNS TINYINT
+AS
+BEGIN
+RETURN
+CASE @setval
+WHEN 'MESSAGE' THEN 1
+WHEN 'QUESTION' THEN 2
+ELSE 0
+END
+END
+GO
+/****** Object:  Table [dbo].[messages]    Script Date: 15.02.2015 23:42:43 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[messages](
+[message_id] [INT] IDENTITY(50, 1) NOT NULL,
+[uid] [INT] NOT NULL,
+[question_id] [INT] NOT NULL,
+[number] [INT] NOT NULL,
+[TEXT] [nvarchar](max) NOT NULL,
+[votes] [INT] NULL,
+[TIME] [DATETIME] NOT NULL,
+CONSTRAINT [PK_messages_message_id] PRIMARY KEY CLUSTERED
+(
+[message_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 
---
--- Table structure for table `question_tags`
---
+GO
+/****** Object:  Table [dbo].[question_tags]    Script Date: 15.02.2015 23:42:43 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[question_tags](
+[question_tag_id] [INT] IDENTITY(5, 1) NOT NULL,
+[question_id] [INT] NOT NULL,
+[tag_id] [INT] NOT NULL,
+CONSTRAINT [PK_question_tags_question_tag_id] PRIMARY KEY CLUSTERED
+(
+[question_tag_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
 
-DROP TABLE IF EXISTS `question_tags`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `question_tags` (
-  `question_tag_id` int(19) NOT NULL AUTO_INCREMENT,
-  `question_id` int(18) NOT NULL,
-  `tag_id` int(11) NOT NULL,
-  PRIMARY KEY (`question_tag_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
+GO
+/****** Object:  Table [dbo].[questions]    Script Date: 15.02.2015 23:42:43 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[questions](
+[question_id] [INT] IDENTITY(18, 1) NOT NULL,
+[uid] [INT] NOT NULL,
+[title] [nvarchar](255) NULL,
+[TEXT] [nvarchar](max) NULL,
+[votes] [INT] NULL,
+[messages] [INT] NULL,
+[asked_time] [DATETIME] NULL,
+[updated_time] [DATETIME] NULL,
+CONSTRAINT [PK_questions_question_id] PRIMARY KEY CLUSTERED
+(
+[question_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 
---
--- Table structure for table `questions`
---
+GO
+/****** Object:  Table [dbo].[tags]    Script Date: 15.02.2015 23:42:43 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[tags](
+[tag_id] [INT] IDENTITY(5, 1) NOT NULL,
+[real_id] [INT] NULL,
+[VALUE] [nvarchar](255) NULL,
+CONSTRAINT [PK_tags_tag_id] PRIMARY KEY CLUSTERED
+(
+[tag_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
 
-DROP TABLE IF EXISTS `questions`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `questions` (
-  `question_id` int(18) NOT NULL AUTO_INCREMENT,
-  `uid` int(11) NOT NULL,
-  `title` varchar(255) DEFAULT NULL,
-  `text` text,
-  `votes` int(4) DEFAULT '0',
-  `messages` int(4) DEFAULT '0',
-  `asked_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`question_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
+GO
+/****** Object:  Table [dbo].[user_roles]    Script Date: 15.02.2015 23:42:43 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[user_roles](
+[role_id] [INT] IDENTITY(5, 1) NOT NULL,
+[uid] [INT] NOT NULL,
+[role] [nvarchar](45) NOT NULL,
+CONSTRAINT [PK_user_roles_role_id] PRIMARY KEY CLUSTERED
+(
+[role_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
 
---
--- Table structure for table `tags`
---
+GO
+/****** Object:  Table [dbo].[users]    Script Date: 15.02.2015 23:42:43 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[users](
+[uid] [INT] IDENTITY(5, 1) NOT NULL,
+[username] [nvarchar](45) NOT NULL,
+[email] [nvarchar](255) NOT NULL,
+[PASSWORD] [nvarchar](60) NULL,
+[reputation] [INT] NULL,
+CONSTRAINT [PK_users_uid] PRIMARY KEY CLUSTERED
+(
+[uid] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
 
-DROP TABLE IF EXISTS `tags`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `tags` (
-  `tag_id` int(11) NOT NULL AUTO_INCREMENT,
-  `real_id` int(11) DEFAULT '0',
-  `value` tinytext,
-  PRIMARY KEY (`tag_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
+GO
+/****** Object:  Table [dbo].[votes]    Script Date: 15.02.2015 23:42:43 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[votes](
+[vote_id] [INT] IDENTITY(91, 1) NOT NULL,
+[uid] [INT] NOT NULL,
+[vote_type] [nvarchar](8) NOT NULL,
+[message_id] [INT] NULL,
+[question_id] [INT] NULL,
+[sign] [INT] NULL,
+CONSTRAINT [PK_votes_vote_id] PRIMARY KEY CLUSTERED
+(
+[vote_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
 
---
--- Table structure for table `user_roles`
---
-
-DROP TABLE IF EXISTS `user_roles`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `user_roles` (
-  `role_id` int(11) NOT NULL AUTO_INCREMENT,
-  `uid` int(11) NOT NULL,
-  `role` varchar(45) NOT NULL,
-  PRIMARY KEY (`role_id`),
-  UNIQUE KEY `uni_role_user` (`role_id`,`uid`),
-  KEY `fk_uid_idx` (`uid`),
-  CONSTRAINT `fk_uid` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `users`
---
-
-DROP TABLE IF EXISTS `users`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `users` (
-  `uid` int(11) NOT NULL AUTO_INCREMENT,
-  `username` varchar(45) NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `password` varchar(60) DEFAULT NULL,
-  `reputation` int(10) DEFAULT '0',
-  PRIMARY KEY (`uid`),
-  UNIQUE KEY `email_UNIQUE` (`email`),
-  UNIQUE KEY `username_UNIQUE` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `votes`
---
-
-DROP TABLE IF EXISTS `votes`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `votes` (
-  `vote_id` int(11) NOT NULL AUTO_INCREMENT,
-  `uid` int(11) NOT NULL,
-  `vote_type` enum('MESSAGE','QUESTION') NOT NULL,
-  `message_id` int(20) DEFAULT NULL,
-  PRIMARY KEY (`vote_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
-
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-
--- Dump completed on 2015-02-07  0:06:30
+GO
+ALTER TABLE [dbo].[messages] ADD DEFAULT ((0)) FOR [votes]
+GO
+ALTER TABLE [dbo].[messages] ADD CONSTRAINT [DF__messages__time__2F10007B] DEFAULT (getdate()) FOR [TIME]
+GO
+ALTER TABLE [dbo].[questions] ADD DEFAULT (NULL) FOR [title]
+GO
+ALTER TABLE [dbo].[questions] ADD DEFAULT ((0)) FOR [votes]
+GO
+ALTER TABLE [dbo].[questions] ADD DEFAULT ((0)) FOR [messages]
+GO
+ALTER TABLE [dbo].[questions] ADD DEFAULT (getdate()) FOR [asked_time]
+GO
+ALTER TABLE [dbo].[questions] ADD DEFAULT (getdate()) FOR [updated_time]
+GO
+ALTER TABLE [dbo].[tags] ADD DEFAULT ((0)) FOR [real_id]
+GO
+ALTER TABLE [dbo].[users] ADD DEFAULT (NULL) FOR [PASSWORD]
+GO
+ALTER TABLE [dbo].[users] ADD DEFAULT ((0)) FOR [reputation]
+GO
+ALTER TABLE [dbo].[votes] ADD DEFAULT (NULL) FOR [message_id]
+GO
+ALTER TABLE [dbo].[votes] ADD DEFAULT (NULL) FOR [question_id]
+GO
+ALTER TABLE [dbo].[votes] ADD DEFAULT ((1)) FOR [sign]
+GO
+ALTER TABLE [dbo].[user_roles] WITH NOCHECK ADD CONSTRAINT [user_roles$fk_uid] FOREIGN KEY([uid])
+REFERENCES [dbo].[users] ([uid])
+GO
+ALTER TABLE [dbo].[user_roles] CHECK CONSTRAINT [user_roles$fk_uid]
+GO
