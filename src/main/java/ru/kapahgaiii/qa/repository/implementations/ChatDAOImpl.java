@@ -79,7 +79,7 @@ public class ChatDAOImpl implements ChatDAO {
     @SuppressWarnings("unchecked")
     public List<Question> getQuestionsList(Timestamp time, Integer[] exclude) {
         int limit = 15;
-        if (exclude == null){
+        if (exclude == null) {
             return sessionFactory.getCurrentSession()
                     .createQuery("from Question where updatedTime <= :time order by updatedTime desc")
                     .setParameter("time", time)
@@ -87,7 +87,7 @@ public class ChatDAOImpl implements ChatDAO {
                     .list();
         }
         return sessionFactory.getCurrentSession()
-                .createQuery("from Question where updatedTime <= :time and id not in (:ids) order by updatedTime desc")
+                .createQuery("from Question where updatedTime <= :time and questionId not in (:ids) order by updatedTime desc")
                 .setParameter("time", time)
                 .setParameterList("ids", exclude)
                 .setMaxResults(limit)
@@ -108,6 +108,7 @@ public class ChatDAOImpl implements ChatDAO {
     public void updateQuestion(Question question) {
         sessionFactory.getCurrentSession().merge(question);
     }
+
 
 
     @Override
@@ -143,21 +144,6 @@ public class ChatDAOImpl implements ChatDAO {
     }
 
     @Override
-    public void saveVote(Vote vote) {
-        sessionFactory.getCurrentSession().save(vote);
-    }
-
-    @Override
-    public void updateVote(Vote vote) {
-        sessionFactory.getCurrentSession().merge(vote);
-    }
-
-    @Override
-    public void deleteVote(Vote vote) {
-        sessionFactory.getCurrentSession().delete(vote);
-    }
-
-    @Override
     @SuppressWarnings("unchecked")
     public Set<Integer> getMessagesUserVotes(Question question, User user) {
         List<Integer> numbers = sessionFactory.getCurrentSession()
@@ -171,5 +157,28 @@ public class ChatDAOImpl implements ChatDAO {
 
     }
 
+    @Override
+    @SuppressWarnings("unchecked")
+    public boolean voteMessage(User user, Message message) {
+        List<Object[]> list = sessionFactory.getCurrentSession()
+                .createSQLQuery("dbo.vote_message :uid, :message_id")
+                .setParameter("uid", user.getUid())
+                .setParameter("message_id", message.getMessageId())
+                .list();
+        message.setVotes((Integer) list.get(0)[1]);
+        return (Integer) list.get(0)[0] == 1;
+    }
 
+    @Override
+    @SuppressWarnings("unchecked")
+    public boolean voteQuestion(User user, Question question, int sign) {
+        List<Object[]> list = sessionFactory.getCurrentSession()
+                .createSQLQuery("dbo.vote_question :uid, :question_id, :sign")
+                .setParameter("uid", user.getUid())
+                .setParameter("question_id", question.getQuestionId())
+                .setParameter("sign", sign)
+                .list();
+        question.setVotes((Integer) list.get(0)[1]);
+        return (Integer) list.get(0)[0] == 1;
+    }
 }

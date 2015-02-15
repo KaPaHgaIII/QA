@@ -217,6 +217,13 @@ input[type='button']:disabled, input[type='submit']:disabled {
 #users_in_chat span {
     font-weight: bold;
 }
+#users_in_chat span:after {
+    content: ",";
+    font-weight: normal;
+}
+#users_in_chat span:nth-last-of-type(2):after, #users_in_chat span:last-of-type:after {
+    content: "";
+}
 
 #users_in_chat span.anon_users {
     font-weight: normal !important;

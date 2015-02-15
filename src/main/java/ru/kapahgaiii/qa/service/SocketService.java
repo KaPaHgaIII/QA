@@ -19,7 +19,7 @@ public class SocketService {
 
     public void sendChatMessage(Message message){
         MessageDTO[] answer = {new MessageDTO(message)}; // client requires array
-        messagingTemplate.convertAndSend("/chat/messages/" + message.getQuestion().getId(), answer);
+        messagingTemplate.convertAndSend("/chat/messages/" + message.getQuestion().getQuestionId(), answer);
     }
 
     public void sendChatEvent(String chatId, ChatEvent event){
@@ -29,13 +29,13 @@ public class SocketService {
     public void sendUserSubscribedToChat(Question question, Subscriber subscriber) {
         ChatEvent chatEvent = new ChatEvent("subscribe");
         chatEvent.setSubscriber(subscriber);
-        messagingTemplate.convertAndSend("/chat/events/" + question.getId(), chatEvent);
+        messagingTemplate.convertAndSend("/chat/events/" + question.getQuestionId(), chatEvent);
     }
 
     public void sendUserUnsubscribedFromChat(Question question, Subscriber subscriber){
         ChatEvent chatEvent = new ChatEvent("unsubscribe");
         chatEvent.setSubscriber(subscriber);
-        messagingTemplate.convertAndSend("/chat/events/" + question.getId(), chatEvent);
+        messagingTemplate.convertAndSend("/chat/events/" + question.getQuestionId(), chatEvent);
     }
 
     public void sendOnline(int users, int guests){
@@ -43,7 +43,7 @@ public class SocketService {
     }
 
     public void sendQuestionInfo(String type, Question question, int value) {
-        messagingTemplate.convertAndSend("/questions", new QuestionInfo(question.getId(), type, value));
+        messagingTemplate.convertAndSend("/questions", new QuestionInfo(question.getQuestionId(), type, value));
     }
 
 }

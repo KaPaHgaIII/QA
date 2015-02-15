@@ -54,6 +54,7 @@ public class WebSocketController {
                     boolean vote = chatService.vote(user, message);
                     event.setResult(vote);
                     event.setUsername(user.getUsername());
+                    event.setValue(message.getVotes());
                     socketService.sendChatEvent(chatId, event);
                 }
             } else if (event.getAction().equals("questionVote")) {
@@ -62,7 +63,7 @@ public class WebSocketController {
                     boolean vote = chatService.vote(user, question, event.getValue());
                     event.setResult(vote);
                     event.setUsername(user.getUsername());
-                    event.setNumber(question.getVotes());
+                    event.setValue(question.getVotes());
                     socketService.sendChatEvent(chatId, event);
                     socketService.sendQuestionInfo("votes", question, question.getVotes());
                 }

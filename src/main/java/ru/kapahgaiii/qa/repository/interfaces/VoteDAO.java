@@ -13,12 +13,10 @@ public interface VoteDAO {
 
     public Vote getQuestionVote(User user, Question question);
 
-    public void saveVote(Vote vote);
-
-    public void updateVote(Vote vote);
-
-    public void deleteVote(Vote vote);
-
     public Set<Integer> getMessagesUserVotes(Question question, User user);
+
+    public boolean voteMessage(User user, Message message);
+
+    public boolean voteQuestion(User user, Question question, int sign);
 
 }

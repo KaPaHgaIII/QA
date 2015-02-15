@@ -10,7 +10,6 @@ import ru.kapahgaiii.qa.domain.User;
 import ru.kapahgaiii.qa.domain.Vote;
 import ru.kapahgaiii.qa.dto.MessageDTO;
 import ru.kapahgaiii.qa.dto.QuestionDTO;
-import ru.kapahgaiii.qa.other.VoteType;
 import ru.kapahgaiii.qa.repository.interfaces.ChatDAO;
 import ru.kapahgaiii.qa.repository.interfaces.UserDAO;
 
@@ -34,9 +33,8 @@ public class ChatService {
 
 
     public void addMessage(Message message) {
-        message.getQuestion().incrementMessages();
-        chatDAO.updateQuestion(message.getQuestion());
         chatDAO.saveMessage(message);
+        message.getQuestion().incrementMessages();
     }
 
     public Question getQuestionById(Integer id) {
@@ -45,10 +43,6 @@ public class ChatService {
 
     public List<MessageDTO> getMessageDTOsList(Question question) {
         return chatDAO.getMessageDTOs(question);
-    }
-
-    public MessageDTO getMessageDTO(Question question, Integer number) {
-        return chatDAO.getMessageDTO(question, number);
     }
 
     public Message getMessage(Question question, Integer number) {
@@ -62,30 +56,7 @@ public class ChatService {
 
     @Transactional
     public boolean vote(User user, Message message) {
-        Vote vote = chatDAO.getMessageVote(user, message);
-        if (vote == null) {
-            vote = new Vote();
-            vote.setUser(user);
-            vote.setMessage(message);
-            vote.setVoteType(VoteType.MESSAGE);
-
-            User author = message.getUser();
-            author.addReputation(2);
-            message.incrementVotes();
-
-            chatDAO.updateMessage(message);
-            chatDAO.saveVote(vote);
-            userDAO.updateUser(author);
-            return true;
-        } else {
-            message.decrementVotes();
-            User author = message.getUser();
-            author.addReputation(-2);
-            chatDAO.updateMessage(message);
-            chatDAO.deleteVote(vote);
-            userDAO.updateUser(author);
-            return false;
-        }
+        return chatDAO.voteMessage(user, message);
     }
 
     public Set<Subscriber> getChatSubscribers(Question question) {
@@ -105,48 +76,7 @@ public class ChatService {
 
     @Transactional
     public boolean vote(User user, Question question, int sign) {
-        Vote vote = chatDAO.getQuestionVote(user, question);
-        User author = question.getUser();
-        if (vote == null) { //adding vote
-            vote = new Vote();
-            vote.setVoteType(VoteType.QUESTION);
-            vote.setQuestion(question);
-            vote.setSign(sign);
-            vote.setUser(user);
-
-            author.addReputation(10 * sign);
-
-            if (sign > 0) {
-                question.incrementVotes();
-            } else {
-                question.decrementVotes();
-            }
-
-            chatDAO.saveVote(vote);
-        } else if (vote.getSign() != sign) { //changing vote
-            if (sign > 0) {
-                question.incrementVotes();
-                question.incrementVotes();
-            } else {
-                question.decrementVotes();
-                question.decrementVotes();
-            }
-            vote.setSign(sign);
-            author.addReputation(20 * sign);
-            chatDAO.updateVote(vote);
-        } else { //deleting vote
-            if (vote.getSign() > 0) {
-                question.decrementVotes();
-            } else {
-                question.incrementVotes();
-            }
-            author.addReputation(-10 * vote.getSign());
-            chatDAO.deleteVote(vote);
-            vote = null;
-        }
-        chatDAO.updateQuestion(question);
-        userDAO.updateUser(author);
-        return vote != null;
+        return chatDAO.voteQuestion(user, question, sign);
     }
 
     public Vote getQuestionVote(User user, Question question) {

@@ -30,7 +30,7 @@ public class QuestionDTO {
     }
 
     public QuestionDTO(Question question, boolean text) {
-        this.id = question.getId();
+        this.id = question.getQuestionId();
         this.username = question.getUser().getUsername();
         this.title = question.getTitle();
         this.text = text ? question.getText() : null;

@@ -543,10 +543,7 @@ var chat = {
                 chat.votes[chat.chatId][event.number] = undefined;
             }
         }
-        var votesCountDOM = messageDOM.find(".votes_count");
-        var sign = event.result ? 1 : -1;
-        var votes = parseInt(0 + votesCountDOM.html()) + sign;
-        votesCountDOM.html(votes == 0 ? "" : votes);
+        messageDOM.find(".votes_count").html(event.value == 0 ? "" : event.value);
     },
     sendQuestionVote: function (value) {
         if (loggedIn) {
@@ -577,7 +574,7 @@ var chat = {
                 buttonDown.removeClass("voted");
             }
         }
-        $("#question_votes").text(event.number);
+        $("#question_votes").text(event.value);
     },
     userSubscribed: function (event) {
         if (!event.subscriber.username) {
@@ -608,7 +605,7 @@ var chat = {
     },
     showSubscribed: function (username) {
         if (chat.subscribedUsers[username] == 1) {
-            $("#users_in_chat .anon_users").before(" <span username='" + username + "'>" + username + "</span> ")
+            $("#users_in_chat .anon_users").before(" <span username='" + username + "' class='authorized'>" + username + "</span> ")
         }
     },
     removeSubscribed: function (username) {

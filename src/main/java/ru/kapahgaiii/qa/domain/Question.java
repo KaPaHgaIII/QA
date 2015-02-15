@@ -11,7 +11,7 @@ public class Question {
 
     @Id
     @Column(name = "question_id")
-    private Integer id;
+    private Integer questionId;
 
     @ManyToOne
     @JoinColumn(name = "uid")
@@ -41,12 +41,12 @@ public class Question {
     private Set<Tag> tags = new HashSet<Tag>();
 
 
-    public Integer getId() {
-        return id;
+    public Integer getQuestionId() {
+        return questionId;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    public void setQuestionId(Integer id) {
+        this.questionId = id;
     }
 
     public String getTitle() {
@@ -126,13 +126,13 @@ public class Question {
 
         Question question = (Question) o;
 
-        if (id != null ? !id.equals(question.id) : question.id != null) return false;
+        if (questionId != null ? !questionId.equals(question.questionId) : question.questionId != null) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        return id != null ? id.hashCode() : 0;
+        return questionId != null ? questionId.hashCode() : 0;
     }
 }
