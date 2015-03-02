@@ -29,7 +29,7 @@
 
 <div id="content_container">
     <div id="content" th:fragment="content">
-        <input type="hidden" th:value="${question.getText()}" value="Вопрос" id="title">
+        <input type="hidden" th:value="${question.getTitle()}" value="Вопрос" id="title">
         <input type="hidden" th:value="${question.getUsername()}" value="author" id="author">
         <a href="index.html" th:href="@{/}" id="question_back">Назад к списку вопросов</a>
 
@@ -53,7 +53,7 @@
             </tr>
             <tr>
                 <td id="question_tags">
-                    <span th:each="tag : ${question.getTags()}" th:text="${tag.getValue()}">теги</span>
+                    <span th:each="tag : ${question.getTags()}" th:text="${tag.getName()}">теги</span>
                 </td>
                 <td id="question_author" th:text="${question.getUsername()}">Автор</td>
             </tr>

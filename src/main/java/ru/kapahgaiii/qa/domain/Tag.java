@@ -13,15 +13,12 @@ public class Tag {
     @Column(name = "tag_id")
     private Integer tagId;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "real_id")
-//    private Tag realTag;
-//
-//    @OneToMany(mappedBy = "realTag")
-//    private Set<Tag> aliases = new HashSet<Tag>();
 
-    @Column(name = "value")
-    private String value;
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "usage")
+    private Integer usage;
 
     public Integer getTagId() {
         return tagId;
@@ -31,27 +28,19 @@ public class Tag {
         this.tagId = tagId;
     }
 
-    /*public Tag getRealTag() {
-        return realTag;
+    public String getName() {
+        return name;
     }
 
-    public void setRealTag(Tag realTag) {
-        this.realTag = realTag;
+    public void setName(String value) {
+        this.name = value;
     }
 
-    public Set<Tag> getAliases() {
-        return aliases;
+    public Integer getUsage() {
+        return usage;
     }
 
-    public void setAliases(Set<Tag> aliases) {
-        this.aliases = aliases;
-    }*/
-
-    public String getValue() {
-        return value;
-    }
-
-    public void setValue(String value) {
-        this.value = value;
+    public void setUsage(Integer usage) {
+        this.usage = usage;
     }
 }

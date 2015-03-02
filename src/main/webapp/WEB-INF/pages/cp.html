@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Вопрос</title>
+    <link rel="stylesheet" href="../../css/main.css" th:href="@{/css/main.css}">
+
+
+    <script type="text/javascript" src="../../js/jquery-2.1.3.min.js" th:src="@{/js/jquery-2.1.3.min.js}"></script>
+    <script type="text/javascript" src="../../js/engine.js" th:src="@{/js/engine.js}"></script>
+
+
+</head>
+<body>
+
+<div id="header">
+
+</div>
+
+<div id="content_container">
+    <div id="content" th:fragment="content">
+        <input type="hidden" value="Личный кабинет" id="title">
+
+        <h3>Личный кабинет</h3>
+
+
+        <h4>Изменить email</h4>
+
+        <table id="change_email_table" class="form_table">
+            <tr>
+                <td class="label">Новый email</td>
+                <td class="input"><input type="text" id="email" th:value="${user.getEmail()}"
+                                         onkeydown="if(event.keyCode == 13){cp.changeEmail()}"></td>
+                <td class="restrictions email">Пригодится, если забудете пароль.</td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <input type="button" value="Сохранить" onclick="cp.changeEmail()">
+                </td>
+            </tr>
+        </table>
+
+
+        <h4>Изменить пароль</h4>
+
+        <table class="form_table" id="change_password_table">
+            <tr>
+                <td class="label">Новый пароль</td>
+                <td class="input"><input type="password" id="password" onkeyup="register.considerPasswords();"></td>
+                <td class="restrictions password">Любой пароль. Хоть пустой.</td>
+            </tr>
+            <tr>
+                <td class="label">Повторите пароль</td>
+                <td class="input"><input type="password" id="password2" onkeyup="register.considerPasswords();"
+                                         onkeydown="if(event.keyCode == 13){cp.changePassword()}"></td>
+                <td class="restrictions password2">Пароли совпадают.</td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <input type="button" value="Сохранить" onclick="cp.changePassword()">
+                </td>
+            </tr>
+        </table>
+
+        <div th:if="${user.vkUid==null}">
+            <h4>Привязать аккаунт ВКонтакте</h4>
+            <!-- Put this div tag to the place, where Auth block will be -->
+            <!--<div id="vk_login_holder">
+                <div id="vk_auth"></div>
+                <script type="text/javascript" src="../../js/vk_attach.js" th:src="@{/js/vk_attach.js}"></script>
+            </div>-->
+
+            <table class="form_table">
+                <tr>
+                    <td class="label" id="vk_login_holder">
+                        <div id="vk_auth"></div>
+                        <script type="text/javascript" src="../../js/vk_attach.js"
+                                th:src="@{/js/vk_attach.js}"></script>
+                    </td>
+                    <td class="restrictions vk"></td>
+                </tr>
+            </table>
+
+        </div>
+
+        <div th:if="${user.vkUid!=null}">
+            <h4>Отвязать аккаунт ВКонтакте</h4>
+            <table class="form_table">
+                <tr>
+                    <td>
+                        <input type="button" value="Отвязать" onclick="cp.vkDetach()">
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+
+        <h4>Интересующие теги</h4>
+
+        <table id="edit_interesting_tags" class="form_table">
+            <tr>
+                <td class="label">Введите теги через запятую</td>
+                <td class="input"><input type="text" class="tag_input" id="interesting_tags"></td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <input type="button" value="Сохранить" onclick="cp.editInterestingTags()">
+                </td>
+            </tr>
+        </table>
+
+    </div>
+</div>
+</body>
+</html>

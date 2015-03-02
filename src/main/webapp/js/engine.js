@@ -13,13 +13,31 @@ $(function () {
 });
 //first time come or page refresh
 $(document).ready(function () {
+
+
+    //check access
+    if (loggedIn) {
+        var denied = ["/lost_password", "/register"];
+        if (denied.indexOf(location.pathname) != -1) {
+            window.location = "/";
+        }
+    }
+
+    //init VK
+
+    VK.init({apiId: 4784902});
+
     connectWebSocket();
-    $("#logout_button").click(function () {
-        $("#logout_form").submit();
-    });
     //load content
-    var url = location.pathname + location.search + location.hash;
+    var url = location.pathname + location.search;
     getPage(url);
+
+    //load right block
+    if (loggedIn) {
+        getPage("/private_zone", true);
+    } else {
+        getPage("/login", true);
+    }
 
     //load online
     setTimeout(function () {
@@ -42,35 +60,56 @@ $(document).ready(function () {
         }, false);
     }, 1);
 });
-function getPage(url) {
-    var hash = window.location.hash.substring(1);
-    if (hash == "loginError") {
-        url = "/login?error"
+function getPage(url, right) {
+    if (!right) {
+        var hash = window.location.hash.substring(1);
+        if (hash == "loginError") {
+            url = "/login_error"
+        }
+        if (url.match("^/?login$")) {
+            url = "/not_found";
+        }
     }
     $.ajax({
         type: "GET",
         url: url,
         success: function (data) {
-            loadPage(url, data);
+            loadPage(url, data, right);
         }
     });
 }
-function loadPage(url, data) {
-    $("#content").remove(); //remove old content, bound events and jquery data
-    $("#content_container").html(data);
-    setTitle();
+function loadPage(url, data, right) {
+    var inner = right ? $("#right_block") : $("#content");
+    var container = right ? $("#right_block_container") : $("#content_container");
+    inner.remove(); //remove old content, bound events and jquery data
+    container.html(data);
     updateLinks();
-    //websocket maintenance
+    tags.updateInputs();
 
-    if (url.match("^/?question")) {
-        chat.setUp(url)
-    } else if (chat.chatId) {
-        chat.finalize();
-    }
-    if (url == "/" || url.match("^/index")) {
-        questions.setUp();
-    } else if (questions.isSet) {
-        questions.finalize();
+    if (right) {
+        if (loggedIn) {
+            $("#logout_button").click(function () {
+                $("#logout_form").submit();
+            });
+            $("#notifications_wr").perfectScrollbar({
+                includePadding: true
+            });
+        }
+    } else {
+        setTitle();
+        if ($("#message").text()) {
+            message.showReadyMessage(3000);
+        }
+        if (url.match("^/?question")) {
+            chat.setUp(url)
+        } else if (chat.chatId) {
+            chat.finalize();
+        }
+        if (url == "/" || url.match("^/index")) {
+            questions.setUp();
+        } else if (questions.isSet) {
+            questions.finalize();
+        }
     }
 }
 function setTitle() {
@@ -88,10 +127,13 @@ function updateLinks() {
                     return true;
                 }
                 var url = $(a).attr("href"); //get url
-                if (url != "/login") {
-                    history.pushState(null, null, url); //update address bar
+                var currentUrl = location.pathname + location.search;
+                if (url != currentUrl) {
+                    if (url != "/login") {
+                        history.pushState(null, null, url); //update address bar
+                    }
+                    getPage(url); //load page
                 }
-                getPage(url); //load page
                 event.preventDefault(); //prevent following the link
             });
         }
@@ -211,10 +253,10 @@ var questions = {
             html[i++] = "<div class='number'>" + q.subscribers + "</div>";
             html[i++] = "<div class='sign'>" + utils.getUsersWord(q.subscribers) + "</div>";
             html[i++] = "</td><td class='title' colspan='2'>";
-            html[i++] = "<a href='question?id=" + q.id + "'>" + q.title + "</a>";
+            html[i++] = "<a href='/question?id=" + q.id + "'>" + q.title + "</a>";
             html[i++] = "</td></tr><tr><td class='tags'>";
             $.each(q.tags, function () {
-                html[i++] = "<span>" + this.value + "</span> "; // space is important!
+                html[i++] = "<span>" + this.name + "</span> "; // space is important!
             });
             html[i++] = "</td><td class='time'>" + utils.formatDate(date) + "</td>";
             html[i++] = "</tr></table>";
@@ -735,9 +777,176 @@ var utils = {
             return a - b;
         });
         return arr;
+    },
+    checkUsername: function (input) {
+        var value = input.value;
+        var rep = /[^a-zA-Zа-яёА-ЯЁ0-9_!&\^\-\*]/g;
+        if (rep.test(value)) {
+            value = value.replace(rep, '');
+            input.value = value;
+        }
     }
 };
+var register = {
+    vkData: undefined,
+    usernameRestrDef: undefined, //default text from html
+    emailRestrDef: undefined, //default text from html
+    register: function () {
+        var usernameResrt = $(".restrictions.username");
+        var emailResrt = $(".restrictions.email");
+        register.usernameRestrDef = register.usernameRestrDef ? register.usernameRestrDef : usernameResrt.text();
+        register.emailRestrDef = register.emailRestrDef ? register.emailRestrDef : emailResrt.text();
+        usernameResrt.text(register.usernameRestrDef);
+        emailResrt.text(register.emailRestrDef);
+        $(".restrictions").not(".password2").css("color", "black");
+        $.ajax({
+            type: "POST",
+            url: "/register_done",
+            data: {
+                username: $("#username").val(),
+                email: $("#email").val(),
+                password: $("#password").val(),
+                password2: $("#password2").val()
+            },
+            success: function (result) {
+                if (result[0] == "success") {
+                    window.location = "/";
+                } else {
+                    if (result.indexOf("incorrect_username") != -1) {
+                        usernameResrt.css("color", "red");
+                        usernameResrt.text(register.usernameRestrDef);
+                    } else if (result.indexOf("busy_username") != -1) {
+                        usernameResrt.css("color", "red");
+                        usernameResrt.text("К сожалению, это имя занято")
+                    }
+                    if (result.indexOf("incorrect_email") != -1) {
+                        emailResrt.css("color", "red");
+                        emailResrt.text("Неверный адрес электронной почты")
+                    } else if (result.indexOf("busy_email") != -1) {
+                        emailResrt.css("color", "red");
+                        emailResrt.text("Этот адрес занят.")
+                    }
+                    if (result.indexOf("passwords_not_equal") != -1) {
+                        var passRestr = $(".restrictions.password2");
+                        passRestr.css("color", "red");
+                        passRestr.text("Пароли не совпадают")
+                    }
+                }
 
+            }
+        });
+    },
+    vkRegister: function () {
+        $("#username_restrictions").css("color", "black");
+        $("#username_busy").css("display", "none");
+        $.ajax({
+            type: "POST",
+            url: "/vk_register_done",
+            data: {vkUid: register.vkData['uid'], hash: register.vkData['hash'], username: $("#username").val()},
+            success: function (result) {
+                if (result == "incorrect_username") {
+                    $("#username_restrictions").css("color", "red");
+                } else if (result == "busy_username") {
+                    $("#username_busy").css("display", "table-row")
+                } else if (result == "failed") {
+                    window.location = "/";
+                } else {
+                    window.location.reload();
+                }
+
+            }
+        });
+    },
+    considerPasswords: function () {
+        var dom = $(".restrictions.password2");
+        if ($("#password").val() == $("#password2").val()) {
+            dom.css("color", "green");
+            dom.html("Пароли совпадают.")
+        } else {
+            dom.css("color", "red");
+            dom.html("Пароли не совпадают.")
+        }
+    },
+    restorePassword: function () {
+        var resultDOM = $("#result");
+        resultDOM.css("color", "black");
+        resultDOM.text("Восстанавливаем пароль, пожалуйста, подождите...")
+        $.ajax({
+            type: "POST",
+            url: "/restore_password",
+            data: {email: $("#email").val()},
+            success: function (result) {
+                if (result == "user_not_found") {
+                    resultDOM.css("color", "red");
+                    resultDOM.text("Пользователь с таким именем или email'ом не найден.")
+                } else if (result == "no_email") {
+                    resultDOM.text("У Вас не указан email. Для восстановления пароля, войдите через Вконтакте.");
+                } else {
+                    resultDOM.css("color", "green");
+                    resultDOM.text("Инструкции по восстановлению пароля высланы на email, указанный при регистрации.");
+                }
+
+            }
+        });
+    }
+};
+var cp = {
+    emailRestrDef: undefined, //default text from html
+    changeEmail: function () {
+        var emailResrt = $(".restrictions.email");
+        cp.emailRestrDef = cp.emailRestrDef ? cp.emailRestrDef : emailResrt.text();
+        emailResrt.text(register.emailRestrDef);
+        emailResrt.css("color", "black");
+        $.ajax({
+            type: "POST",
+            url: "/change_email",
+            data: {
+                email: $("#email").val()
+            },
+            success: function (result) {
+                if (result == "success") {
+                    emailResrt.css("color", "green");
+                    emailResrt.text("Успешно")
+                } else if (result == "incorrect_email") {
+                    emailResrt.css("color", "red");
+                    emailResrt.text("Неверный адрес электронной почты")
+                } else if (result == "busy_email") {
+                    emailResrt.css("color", "red");
+                    emailResrt.text("Этот адрес занят.")
+                }
+            }
+        });
+    },
+    changePassword: function () {
+        $.ajax({
+            type: "POST",
+            url: "/change_password",
+            data: {
+                password: $("#password").val(),
+                password2: $("#password2").val()
+            },
+            success: function (result) {
+                var passRestr = $(".restrictions.password2");
+                if (result == "success") {
+                    passRestr.css("color", "green");
+                    passRestr.text("Успешно")
+                } else if (result == "passwords_not_equal") {
+                    passRestr.css("color", "red");
+                    passRestr.text("Пароли не совпадают")
+                }
+            }
+        });
+    },
+    vkDetach: function(){
+        $.ajax({
+            type: "POST",
+            url: "/vk_detach",
+            success: function (result) {
+                window.location.reload();
+            }
+        });
+    }
+};
 var message = {
     headerDOM: undefined,
     hideTimeout: undefined,
@@ -757,13 +966,17 @@ var message = {
         messageDOM.addClass("success");
         this.prepareHide();
     },
-    prepareHide: function () {
+    showReadyMessage: function (delay) {
+        this.prepareHide(delay);
+    },
+    prepareHide: function (delay) {
+        delay = delay ? delay : 1000;
         this.headerDOM = $("#header_wr");
         this.headerDOM.css("opacity", "0");
         this.opa = 0;
         this.x = 1;
         clearTimeout(message.hideTimeout);
-        this.hideTimeout = setTimeout(message.hide, 1000);
+        this.hideTimeout = setTimeout(message.hide, delay);
     },
     hide: function () {
         message.opa = message.opa + message.x;
@@ -771,6 +984,134 @@ var message = {
         message.headerDOM.css("opacity", message.opa / 100);
         if (message.opa < 100) {
             message.hideTimeout = setTimeout(message.hide, 50)
+        } else {
+            $("#message").text("");
+        }
+    }
+};
+var tags = {
+    selected: -1,
+    count: 0,
+    timer: undefined,
+    $input: undefined,
+    navigationCodes: [38, 40, 13],
+    updateInputs: function () {
+        tags.$input = $(".tag_input");
+        var input = tags.$input[0];
+        if (!input) {
+            return;
+        }
+        if (!$(".tag_ul")[0]) {
+            $(input).after("<div class='tag_ul'></div>")
+            $(".tag_ul").css("width", tags.$input.outerWidth() + "px");
+        }
+        if (!($._data(input, "events") && $._data(input, "events")['keyup'])) {
+            tags.preventUpDown.prevent(input);
+            $(input).keyup(function (event) {
+                if (tags.navigationCodes.indexOf(event.keyCode) != -1) {
+                    return;
+                }
+                tags.hide();
+                clearTimeout(tags.timer);
+                tags.timer = setTimeout(function () {
+                    tags.load(input);
+                }, 500); // increase delay if server overloaded
+            });
+            $(input).keydown(function (event) {
+                if (tags.navigationCodes.indexOf(event.keyCode) != -1) {
+                    tags.navigate(event);
+                }
+            });
+        }
+    },
+    load: function (input) {
+        var array = input.value.split(",");
+        var s = array[array.length - 1].trim();
+        if (!s) {
+            return;
+        }
+        $.ajax({
+            type: "POST",
+            url: "/get_tags",
+            data: {s: s},
+            success: function (result) {
+                tags.show(result);
+            }
+        });
+    },
+    show: function (list) {
+        var ul = $(".tag_ul");
+        var array = tags.$input.val().split(",");
+        for (var i = 0; i < array.length; i++) {
+            array[i] = array[i].trim();
+        }
+        $.each(list, function () {
+            var name = this.name;
+            var usage = this.usage;
+            if (array.indexOf(name) == -1) {
+                var li = $("<div class='tag_li' name='" + name + "'><span class='usage'>" + usage + "</span>" + name + "</div>");
+                ul.append(li);
+                li.click(function () {
+                    tags.select(li);
+                });
+            }
+        });
+        tags.count = list.length;
+    },
+    hide: function () {
+        $(".tag_li").remove();
+        tags.selected = -1;
+        tags.count = 0;
+    },
+    navigate: function (event) {
+        if (event.keyCode != 13) {
+            $(".tag_li").removeClass("selected");
+            if (event.keyCode == 38) { // up
+                tags.selected = Math.max(-1, tags.selected - 1);
+            } else { // down
+                tags.selected = Math.min(tags.count - 1, tags.selected + 1);
+            }
+            if (tags.selected != -1) {
+                $(".tag_li:nth(" + tags.selected + ")").addClass("selected");
+            }
+        } else {
+            tags.select($(".tag_li:nth(" + tags.selected + ")"));
+        }
+    },
+    select: function (li) {
+        var array = tags.$input.val().split(",");
+        array[array.length - 1] = $(li).attr("name");
+        for (var i = 0; i < array.length; i++) {
+            array[i] = array[i].trim();
+        }
+        tags.$input.val(array.join(", ") + ", ");
+        tags.hide();
+        tags.$input.blur(); // in order to scroll to the end
+        tags.$input.focus();
+    },
+    preventUpDown: {
+        prevent: function (input) {
+            input.addEventListener('keydown', tags.preventUpDown.handler, false);
+            input.addEventListener('keypress', tags.preventUpDown.handler, false);
+        },
+        ignoreKey: false,
+        handler: function (e) {
+            if (tags.preventUpDown.ignoreKey) {
+                e.preventDefault();
+                return;
+            }
+            if (e.keyCode == 38 || e.keyCode == 40) {
+                var pos = this.selectionStart;
+                this.selectionStart = pos;
+                this.selectionEnd = pos;
+
+                tags.preventUpDown.ignoreKey = true;
+                setTimeout(function () {
+                    tags.preventUpDown.ignoreKey = false
+                }, 1);
+                e.preventDefault();
+            }
+
         }
     }
 };

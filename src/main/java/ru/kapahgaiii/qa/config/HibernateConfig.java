@@ -3,10 +3,8 @@ package ru.kapahgaiii.qa.config;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.orm.hibernate4.HibernateTransactionManager;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBuilder;
 
@@ -57,10 +55,4 @@ public class HibernateConfig {
         return new HibernateTransactionManager(getSessionFactory());
     }
 
-    @Bean
-    public static PropertyPlaceholderConfigurer getHibernateConfig(){
-        PropertyPlaceholderConfigurer configurer = new PropertyPlaceholderConfigurer();
-        configurer.setLocation(new ClassPathResource("jdbc.properties"));
-        return configurer;
-    }
 }

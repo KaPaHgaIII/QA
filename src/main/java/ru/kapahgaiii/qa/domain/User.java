@@ -1,5 +1,8 @@
 package ru.kapahgaiii.qa.domain;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
@@ -8,7 +11,10 @@ import java.util.Set;
 @Table(name = "users")
 public class User {
 
+    private static PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(); // for password encoding
+
     @Id
+    @GeneratedValue
     @Column(name = "uid")
     private Integer uid;
 
@@ -21,7 +27,10 @@ public class User {
     @Column(name = "password")
     private String password;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "user")
+    @Column(name = "vk_uid")
+    private Integer vkUid;
+
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "user", cascade = CascadeType.ALL)
     private Set<UserRole> userRoles = new HashSet<UserRole>();
 
     @Column(name = "reputation")
@@ -57,6 +66,21 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+    public void encodeAndSetPassword(String password) {
+        this.password = passwordEncoder.encode(password);
+    }
+
+    public Integer getVkUid() {
+        return vkUid;
+    }
+
+    public void setVkUid(Integer vkUid) {
+        this.vkUid = vkUid;
+    }
+
+    public void setUserRoles(Set<UserRole> userRoles) {
+        this.userRoles = userRoles;
     }
 
     public Set<UserRole> getUserRoles() {

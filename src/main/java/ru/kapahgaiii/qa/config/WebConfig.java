@@ -1,9 +1,11 @@
 package ru.kapahgaiii.qa.config;
 
+import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -50,6 +52,15 @@ public class WebConfig extends WebMvcConfigurerAdapter {
         resolver.setTemplateEngine(templateEngine());
         resolver.setCharacterEncoding("UTF-8");
         return resolver;
+    }
+
+    @Bean
+    public static PropertyPlaceholderConfigurer getHibernateConfig() {
+        PropertyPlaceholderConfigurer configurer = new PropertyPlaceholderConfigurer();
+        ClassPathResource[] resources = {new ClassPathResource("jdbc.properties"),
+                new ClassPathResource("security.properties")};
+        configurer.setLocations(resources);
+        return configurer;
     }
 
 }

@@ -4,10 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.kapahgaiii.qa.controller.SessionController;
 import ru.kapahgaiii.qa.core.objects.Subscriber;
-import ru.kapahgaiii.qa.domain.Message;
-import ru.kapahgaiii.qa.domain.Question;
-import ru.kapahgaiii.qa.domain.User;
-import ru.kapahgaiii.qa.domain.Vote;
+import ru.kapahgaiii.qa.domain.*;
 import ru.kapahgaiii.qa.dto.MessageDTO;
 import ru.kapahgaiii.qa.dto.QuestionDTO;
 import ru.kapahgaiii.qa.repository.interfaces.ChatDAO;
@@ -81,6 +78,10 @@ public class ChatService {
 
     public Vote getQuestionVote(User user, Question question) {
         return chatDAO.getQuestionVote(user, question);
+    }
+
+    public List<Tag> getTags(String s) {
+        return chatDAO.getTags(s);
     }
 
 }

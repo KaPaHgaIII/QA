@@ -40,7 +40,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.authorizeRequests()
                 .antMatchers("/**").permitAll()
                 .and()
-                .formLogin().loginPage("/login")
+                .formLogin().loginPage("/login").usernameParameter("login").passwordParameter("password")
                 .successHandler(loginSuccessHandler())
                 .failureHandler(authenticationFailureHandler())
                 .and()

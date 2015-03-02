@@ -3,10 +3,7 @@ package ru.kapahgaiii.qa.repository.implementations;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ru.kapahgaiii.qa.domain.Message;
-import ru.kapahgaiii.qa.domain.Question;
-import ru.kapahgaiii.qa.domain.User;
-import ru.kapahgaiii.qa.domain.Vote;
+import ru.kapahgaiii.qa.domain.*;
 import ru.kapahgaiii.qa.dto.MessageDTO;
 import ru.kapahgaiii.qa.other.VoteType;
 import ru.kapahgaiii.qa.repository.interfaces.ChatDAO;
@@ -110,7 +107,6 @@ public class ChatDAOImpl implements ChatDAO {
     }
 
 
-
     @Override
     @SuppressWarnings("unchecked")
     public Vote getMessageVote(User user, Message message) {
@@ -180,5 +176,17 @@ public class ChatDAOImpl implements ChatDAO {
                 .list();
         question.setVotes((Integer) list.get(0)[1]);
         return (Integer) list.get(0)[0] == 1;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<Tag> getTags(String s) {
+        List<Tag> tags = sessionFactory.getCurrentSession()
+                .createQuery("from Tag where name like :s ORDER BY usage DESC")
+                .setParameter("s", s + "%")
+                .setMaxResults(15)
+                .list();
+
+        return tags;
     }
 }

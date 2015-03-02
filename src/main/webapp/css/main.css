@@ -42,9 +42,15 @@ h3 {
     font-weight: bold;
 }
 
+h4 {
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 15px;
+}
+
 input[type='text'], input[type='password'] {
     border: 1px solid #777777;
-    padding: 5px;
+    padding: 2px 5px;
 }
 
 input[type='button'], input[type='submit'] {
@@ -67,8 +73,77 @@ input[type='button']:hover, input[type='submit']:hover {
 input[type='button']:active, input[type='submit']:active {
     box-shadow: inset 1px 1px 1px 1px #777777;
 }
+
 input[type='button']:disabled, input[type='submit']:disabled {
     color: #909090;
+}
+
+.clear {
+    clear: both;
+}
+
+.form_table {
+    width: 100%;
+}
+
+.form_table td {
+    padding: 5px 5px;
+}
+
+.form_table .label {
+    font-size: 13px;
+    width: 1px;
+    white-space: nowrap;
+    padding-right: 10px;
+}
+.form_table .input {
+    width: 1px;
+    white-space: nowrap;
+    padding-right: 10px;
+}
+
+.form_table .restrictions {
+    font-size: 13px;
+    text-align: left;
+}
+
+.form_table .restrictions.password2 {
+    color: green;
+}
+
+
+.tag_input {
+    min-width: 400px;
+}
+
+.tag_ul {
+    position: relative;
+    height: 0;
+}
+
+.tag_li {
+    height: 16px;
+    background-color: #FFFFFF;
+    font-size: 12px;
+    cursor: pointer;
+    border-bottom: 1px solid black;
+    border-left: 1px solid black;
+    border-right: 1px solid black;
+    padding: 2px 5px;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.tag_li:hover, .tag_li.selected {
+    background-color: #6474a5;
+}
+
+.tag_li .usage {
+    float: right;
+    position: relative;
+    background-color: inherit;
+    z-index: 10;
+    font-weight: bold;
 }
 
 #header_wr {
@@ -120,11 +195,46 @@ input[type='button']:disabled, input[type='submit']:disabled {
     font-weight: bold;
 }
 
-#content_container {
+#page_body {
     width: 980px;
     margin: 0 auto;
     padding: 20px 0;
 }
+
+#right_block_container {
+    width: 330px;
+    float: right;
+    background-color: #EEEEEE;
+    margin-top: 36px;
+}
+
+#content_container {
+    width: 625px;
+}
+
+#need_username {
+    width: 500px;
+    margin: 20px 0;
+}
+
+#need_username #username_restrictions, #need_username #username_busy {
+    text-align: center;
+    font-size: 13px;
+    padding-top: 20px;
+}
+
+#need_username #username_busy {
+    display: none;
+}
+
+#register_table .label {
+    width: 110px;
+}
+
+#register_table .input {
+    width: 171px;
+}
+
 
 #questions_top {
     width: 625px;
@@ -217,10 +327,12 @@ input[type='button']:disabled, input[type='submit']:disabled {
 #users_in_chat span {
     font-weight: bold;
 }
+
 #users_in_chat span:after {
     content: ",";
     font-weight: normal;
 }
+
 #users_in_chat span:nth-last-of-type(2):after, #users_in_chat span:last-of-type:after {
     content: "";
 }
@@ -325,8 +437,6 @@ input[type='button']:disabled, input[type='submit']:disabled {
     position: relative;
     top: 10px;
     width: 80px;
-    height: 26px;
-    line-height: 26px;
 }
 
 #chat_wr #chat .message {
@@ -389,26 +499,63 @@ input[type='button']:disabled, input[type='submit']:disabled {
 
 #login_table {
     border-spacing: 0;
-    /*width: 500px;*/
+    width: 330px;
     padding: 20px;
 }
 
 #login_table td {
+    font-size: 12px;
+}
 
+#login_title {
+    font-size: 15px;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    padding-bottom: 7px;
 }
 
 #login_table input[type='text'], #login_table input[type='password'] {
-    width: 200px;
-    margin: 10px 0;
-    /*font-size: 20px;*/
+    width: 190px;
+    margin: 2px 0;
+    font-size: 12px;
+    height: 9px;
+    padding: 5px;
 }
 
 #login_table input[type='submit'] {
-
+    margin-left: 39px;
 }
 
-#login_table a {
-    margin-right: 50px;
+#login_register {
+    font-weight: normal;
+    float: right;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#lost_password {
+    font-weight: normal;
+    margin-right: 60px;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+}
+
+#lost_password_table {
+    width: 100%;
+}
+
+#lost_password_table td, #login_error_table td {
+    padding: 10px 30px 5px 0;
+}
+
+#lost_password_table #email {
+    width: 100%;
+}
+
+#lost_password_table #result {
+    font-size: 12px;
+}
+
+#login_bottom {
+    padding-top: 5px;
 }
 
 #error_message {
@@ -421,4 +568,100 @@ input[type='button']:disabled, input[type='submit']:disabled {
     color: green;
     padding-top: 5px;
     text-align: center;
+}
+
+#vk_auth {
+    margin: 0 auto 20px auto;
+}
+
+#right_block #login_info, #right_block #go_to_cp {
+    padding: 5px 15px 0 0;
+    text-align: right;
+}
+#right_block #login_info #username{
+    font-weight: bold;
+}
+
+#right_block #go_to_cp {
+    font-size: 12px;
+}
+
+#notifications_wr {
+    margin: 10px 0;
+}
+
+#notifications_wr #notifications_title{
+    font-size: 14px;
+    margin: 0 0 5px 15px;
+    font-weight: bold;
+}
+
+#notifications_wr #notifications_container {
+    position: relative;
+    width: 300px;
+    overflow-y: hidden;
+    margin: 0 auto;
+    box-shadow: 1px 1px 1px 1px #333333;
+    height: 400px;
+}
+
+#notifications_wr #notifications_container #notifications {
+    min-height: 390px;
+    display: table-cell;
+    vertical-align: bottom;
+}
+
+#notifications_wr #notifications .notification {
+    width: 100%;
+    font-size: 13px;
+    margin-bottom: 3px;
+    padding-top: 3px;
+    border-top: 1px solid #CCCCCC;
+}
+
+#notifications_wr #notifications .notification .icon {
+    width: 24px;
+    padding: 3px 6px;
+    vertical-align: top;
+}
+
+#notifications_wr #notifications .notification .icon div {
+    width: 24px;
+    height: 24px;
+    background: url("images/notifications_icons.png") no-repeat;
+}
+#notifications_wr #notifications .notification .icon.new_question div {
+    background-position: 0 0;
+}
+#notifications_wr #notifications .notification .icon.new_message div {
+    background-position: 0 -24px;
+}
+#notifications_wr #notifications .notification .icon.addressed_message div {
+    background-position: 0 -48px;
+}
+
+#notifications_wr #notifications .notification .time {
+    color: #777777;
+    font-size: 11px;
+}
+
+#notifications_wr #notifications .notification .text {
+    width: 251px;
+    max-width: 251px;
+    padding-right: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#change_password_table .label {
+    width: 110px;
+}
+
+#change_password_table .input {
+    width: 171px;
+}
+
+#vk_login_holder {
+    margin: 15px 0;
 }

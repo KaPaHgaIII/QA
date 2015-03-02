@@ -7,10 +7,11 @@ import javax.persistence.*;
 public class UserRole {
 
     @Id
+    @GeneratedValue
     @Column(name = "role_id")
     private Integer role_id;
 
-    @ManyToOne()
+    @ManyToOne
     @JoinColumn(name = "uid")
     private User user;
 
