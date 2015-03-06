@@ -13,16 +13,14 @@ import org.springframework.stereotype.Service;
 import ru.kapahgaiii.qa.core.objects.MyPrincipal;
 import ru.kapahgaiii.qa.core.tools.StringEncoder;
 import ru.kapahgaiii.qa.domain.RestorePassword;
+import ru.kapahgaiii.qa.domain.Tag;
 import ru.kapahgaiii.qa.domain.User;
 import ru.kapahgaiii.qa.domain.UserRole;
 import ru.kapahgaiii.qa.repository.interfaces.UserDAO;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 
 @Service("UserService")
@@ -177,5 +175,15 @@ public class UserService implements org.springframework.security.core.userdetail
     public void deleteRestorePassword(RestorePassword restorePassword) {
         userDAO.deleteRestorePassword(restorePassword);
     }
+
+    public void deleteInterestingTag(User user, Tag tag) {
+        user.getInterestingTags().remove(tag);
+        userDAO.updateUser(user);
+    }
+    public void addInterestingTags(User user, Collection<Tag> tags) {
+        user.getInterestingTags().addAll(tags);
+        userDAO.updateUser(user);
+    }
+
 
 }

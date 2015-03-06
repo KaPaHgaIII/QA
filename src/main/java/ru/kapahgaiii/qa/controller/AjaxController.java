@@ -9,10 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ru.kapahgaiii.qa.core.objects.Subscriber;
-import ru.kapahgaiii.qa.domain.Question;
-import ru.kapahgaiii.qa.domain.RestorePassword;
-import ru.kapahgaiii.qa.domain.Tag;
-import ru.kapahgaiii.qa.domain.User;
+import ru.kapahgaiii.qa.domain.*;
 import ru.kapahgaiii.qa.dto.ChatInitial;
 import ru.kapahgaiii.qa.dto.MessageDTO;
 import ru.kapahgaiii.qa.dto.Online;
@@ -23,10 +20,7 @@ import ru.kapahgaiii.qa.service.UserService;
 import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 
 @Controller
@@ -72,10 +66,25 @@ public class AjaxController {
         Question question = chatService.getQuestionById(id);
         model.addAttribute("question", new QuestionDTO(question, true));
         if (principal != null) {
+            User user = userService.findByUsername(principal.getName());
             model.addAttribute("vote",
-                    chatService.getQuestionVote(userService.findByUsername(principal.getName()), question));
+                    chatService.getQuestionVote(user, question));
+            model.addAttribute("isFavourite",
+                    chatService.isFavouriteQuestion(question, user));
         }
         return "question :: content";
+    }
+
+    @RequestMapping("/add_to_favourite")
+    public
+    @ResponseBody
+    boolean restorePassword(@RequestParam(value = "questionId") Integer questionId, Principal principal) {
+        if (principal==null) {
+            return false;
+        }
+        Question question = chatService.getQuestionById(questionId);
+        User user = userService.findByUsername(principal.getName());
+        return chatService.addToFavourite(question, user);
     }
 
     @RequestMapping("/cp")
@@ -86,7 +95,8 @@ public class AjaxController {
         if (!isAjax(request)) {
             return template(model);
         }
-        model.addAttribute("user", userService.findByUsername(principal.getName()));
+        User user = userService.findByUsername(principal.getName());
+        model.addAttribute("user", user);
         return "cp :: content";
     }
 
@@ -312,6 +322,35 @@ public class AjaxController {
         userService.updateUser(user);
         return "success";
     }
+
+
+    @RequestMapping("/add_interesting_tags")
+    public
+    @ResponseBody
+    String addInterestingTags(@RequestParam(value = "tags") String tagsString, Principal principal) {
+        if (principal == null) {
+            return "not_logined";
+        }
+        User user = userService.findByUsername(principal.getName());
+        Set<Tag> tags = chatService.parseTagsString(tagsString);
+        userService.addInterestingTags(user, tags);
+        return "success";
+    }
+
+    @RequestMapping("/delete_interesting_tag")
+    public
+    @ResponseBody
+    String deleteInterestingTag(@RequestParam(value = "name") String name, Principal principal) {
+        if (principal == null) {
+            return "not_logined";
+        }
+        User user = userService.findByUsername(principal.getName());
+        Tag tag = chatService.getTagByName(name);
+        userService.deleteInterestingTag(user, tag);
+        return "success";
+    }
+
+
 
     @RequestMapping("/loadChat/{chatId}")
     public

@@ -15,6 +15,8 @@ public class MessageDTO {
 
     private String username;
 
+    private String addressee;
+
     private Integer votes;
 
     private Timestamp time = new Timestamp(new Date().getTime());
@@ -29,6 +31,7 @@ public class MessageDTO {
         this.username = message.getUser().getUsername();
         this.votes = message.getVotes();
         this.time = message.getTime();
+        this.addressee = message.getAddressee()!= null ? message.getAddressee().getUsername() : null;
     }
 
     public Integer getMessage_id() {
@@ -61,6 +64,14 @@ public class MessageDTO {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getAddressee() {
+        return addressee;
+    }
+
+    public void setAddressee(String addressee) {
+        this.addressee = addressee;
     }
 
     public Timestamp getTime() {

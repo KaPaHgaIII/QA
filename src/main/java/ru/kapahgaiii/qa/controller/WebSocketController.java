@@ -34,7 +34,9 @@ public class WebSocketController {
             Question question = chatService.getQuestionById(Integer.parseInt(chatId));
 
             Message message = new Message(question, userService.findByUsername(principal.getName()), messageDTO.getText());
-
+            if (messageDTO.getAddressee() != null) {
+                message.setAddressee(userService.findByUsername(messageDTO.getAddressee()));
+            }
             chatService.addMessage(message);
 
             socketService.sendChatMessage(message);

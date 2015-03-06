@@ -99,13 +99,20 @@
         <h4>Интересующие теги</h4>
 
         <table id="edit_interesting_tags" class="form_table">
-            <tr>
-                <td class="label">Введите теги через запятую</td>
+            <tr th:each="t : ${user.getInterestingTags()}">
+                <td colspan="3">
+                    <span class="tag" th:text="${t.getName()}">Тег</span>
+                    <span class="tag_delete" onclick="cp.deleteInterestingTag(this)">Удалить</span>
+                </td>
+            </tr>
+            <tr id="add_new_interesting_tag_tr">
+                <td class="label">Добавить новые</td>
                 <td class="input"><input type="text" class="tag_input" id="interesting_tags"></td>
+                <td class="restrictions tags"></td>
             </tr>
             <tr>
                 <td colspan="2">
-                    <input type="button" value="Сохранить" onclick="cp.editInterestingTags()">
+                    <input type="button" value="Добавить" onclick="cp.addInterestingTags()">
                 </td>
             </tr>
         </table>

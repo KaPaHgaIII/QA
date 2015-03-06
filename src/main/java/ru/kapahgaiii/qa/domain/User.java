@@ -36,6 +36,12 @@ public class User {
     @Column(name = "reputation")
     private Integer reputation = 0;
 
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "interesting_tags",
+            joinColumns = @JoinColumn(name = "uid"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id"))
+    private Set<Tag> interestingTags = new HashSet<Tag>();
+
     public Integer getUid() {
         return uid;
     }
@@ -99,8 +105,12 @@ public class User {
         this.reputation = reputation;
     }
 
-    public void addReputation(int value) {
-        reputation += value;
+    public Set<Tag> getInterestingTags() {
+        return interestingTags;
+    }
+
+    public void setInterestingTags(Set<Tag> interestingTags) {
+        this.interestingTags = interestingTags;
     }
 
     @Override
@@ -110,13 +120,13 @@ public class User {
 
         User user = (User) o;
 
-        if (uid != null ? !uid.equals(user.uid) : user.uid != null) return false;
+        if (!uid.equals(user.uid)) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        return uid != null ? uid.hashCode() : 0;
+        return uid.hashCode();
     }
 }

@@ -10,7 +10,7 @@ import java.util.Date;
 public class RestorePassword implements Serializable {
 
     @Id
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "uid")
     private User user;
 

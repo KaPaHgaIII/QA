@@ -189,4 +189,48 @@ public class ChatDAOImpl implements ChatDAO {
 
         return tags;
     }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Tag getTagByName(String name) {
+        List<Tag> tags = sessionFactory.getCurrentSession()
+                .createQuery("from Tag where name=:name")
+                .setParameter("name", name)
+                .list();
+        if (tags.isEmpty()) {
+            return null;
+        } else {
+            return tags.get(0);
+        }
+    }
+
+    @Override
+    public void addTag(Tag tag) {
+        sessionFactory.getCurrentSession().save(tag);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public FavouriteQuestion getFavouriteQuestion(Question question, User user) {
+        List<FavouriteQuestion> list = sessionFactory.getCurrentSession()
+                .createQuery("from FavouriteQuestion where question=:question and user=:user")
+                .setParameter("question", question)
+                .setParameter("user", user)
+                .list();
+        if (list.isEmpty()) {
+            return null;
+        } else {
+            return list.get(0);
+        }
+    }
+
+    @Override
+    public void saveFavouriteQuestion(FavouriteQuestion favouriteQuestion) {
+        sessionFactory.getCurrentSession().save(favouriteQuestion);
+    }
+
+    @Override
+    public void deleteFavouriteQuestion(FavouriteQuestion favouriteQuestion) {
+        sessionFactory.getCurrentSession().delete(favouriteQuestion);
+    }
 }

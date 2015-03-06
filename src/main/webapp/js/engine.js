@@ -299,6 +299,7 @@ var questions = {
     }
 };
 var chat = {
+    addressee: undefined,
     votes: [],
     chatId: undefined,
     messagesSubscription: undefined,
@@ -310,6 +311,7 @@ var chat = {
     userScrolledChat: false, // defines if we should scroll when new message coming
     programScroll: false, // true - program scrolling, false - user scrolling (for scroll event)
     subscribedUsers: [],
+    messageInputWidth: 0,
     setUp: function (url) {
         var regExp = /^\/?question\?id=(.*)/;
         this.chatId = regExp.exec(url)[1];
@@ -371,12 +373,12 @@ var chat = {
         //scrolling
         var chatContainer = $('#chat_container');
         chatContainer.scroll(function () {
-            if (!this.programScroll) {
-                this.userScrolledChat = ($("#chat").height() - chatContainer.height()) > chatContainer.scrollTop();
+            if (!chat.programScroll) {
+                chat.userScrolledChat = ($("#chat").height() - chatContainer.height()) > chatContainer.scrollTop();
             }
             if (chatContainer.scrollTop() < 50) {
-                if (this.firstShownMessage != 0) {
-                    this.showMessages(1);
+                if (chat.firstShownMessage != 0) {
+                    chat.showMessages(1);
                 }
             }
         });
@@ -394,6 +396,9 @@ var chat = {
             if (target.hasClass("vote_up")) {
                 chat.sendVote(target.parents(".message").attr("number"));
             }
+            if (target.hasClass("username")) {
+                chat.reply(target.attr("username"));
+            }
         });
         chatContainer.perfectScrollbar({
             includePadding: true
@@ -407,6 +412,7 @@ var chat = {
     },
     finalize: function () {
         this.unsubscribe();
+        this.addressee = undefined;
         this.chatId = undefined;
         this.messagesSubscription = undefined;
         this.messages = [];
@@ -526,9 +532,19 @@ var chat = {
             if (m.votes > 0) {
                 html[i++] = m.votes;
             }
-            html[i++] = "</span></td><td class='name_text'><span class='username'>";
+            html[i++] = "</span></td><td class='name_text'><span class='username' username='";
             html[i++] = m.username;
-            html[i++] = ": </span><span class='text'>";
+            html[i++] = "'>";
+            html[i++] = m.username;
+            html[i++] = ": </span>";
+            if (m.addressee) {
+                html[i++] = "<span class='addressee";
+                html[i++] = m.addressee == myUsername ? " iAmAddressee" : "";
+                html[i++] = "'>";
+                html[i++] = m.addressee;
+                html[i++] = "</span>, ";
+            }
+            html[i++] = "<span class='text'>";
             html[i++] = m.text;
             html[i++] = "</span></td><td class='time'>";
             html[i++] = utils.formatDate(date);
@@ -562,7 +578,8 @@ var chat = {
             var messageInput = $("#message_input");
             var text = messageInput.val();
             if (text) {
-                stompClient.send("/app/chat/messages/" + this.chatId, {}, JSON.stringify({text: text}));
+                var data = {text: text, addressee: chat.addressee};
+                stompClient.send("/app/chat/messages/" + this.chatId, {}, JSON.stringify(data));
             }
             messageInput.val("");
             messageInput.focus();
@@ -586,6 +603,25 @@ var chat = {
             }
         }
         messageDOM.find(".votes_count").html(event.value == 0 ? "" : event.value);
+    },
+    sendFavourite: function () {
+        if (loggedIn) {
+            $.ajax({
+                type: "POST",
+                url: "/add_to_favourite",
+                data: {questionId: chat.chatId},
+                success: function (result) {
+                    chat.receiveFavourite(result)
+                }
+            });
+        }
+    },
+    receiveFavourite: function (result) {
+        if (result) {
+            $("#question_add_to_favourite").addClass("active");
+        } else {
+            $("#question_add_to_favourite").removeClass("active");
+        }
     },
     sendQuestionVote: function (value) {
         if (loggedIn) {
@@ -672,6 +708,23 @@ var chat = {
         } else {
             anonDOM.html("");
         }
+    },
+    reply: function (username) {
+        var reply = $("#reply");
+        var messageInput = $("#message_input");
+        chat.messageInputWidth = chat.messageInputWidth ? chat.messageInputWidth : messageInput.width();
+        chat.cancelReply();
+        reply.css("display", "inline");
+        $("#reply_username").text(username);
+        messageInput.width(chat.messageInputWidth - reply.outerWidth());
+        chat.addressee = username;
+    },
+    cancelReply: function () {
+        var reply = $("#reply");
+        var messageInput = $("#message_input");
+        reply.css("display", "none");
+        messageInput.width(chat.messageInputWidth);
+        chat.addressee = undefined;
     }
 };
 var utils = {
@@ -937,12 +990,48 @@ var cp = {
             }
         });
     },
-    vkDetach: function(){
+    vkDetach: function () {
         $.ajax({
             type: "POST",
             url: "/vk_detach",
             success: function (result) {
-                window.location.reload();
+                getPage("/cp");
+            }
+        });
+    },
+    addInterestingTags: function () {
+        var restr = $(".restrictions.tags");
+        restr.text("");
+        $.ajax({
+            type: "POST",
+            url: "/add_interesting_tags",
+            data: {
+                tags: $("#interesting_tags").val()
+            },
+            success: function (result) {
+                if (result == "success") {
+                    getPage("/cp");
+                } else {
+                    restr.css("color", "red");
+                    restr.text("Ошибка");
+                }
+            }
+        });
+    },
+    deleteInterestingTag: function (deleteSpan) {
+        var tr = $(deleteSpan).parents("tr");
+        $.ajax({
+            type: "POST",
+            url: "/delete_interesting_tag",
+            data: {
+                name: tr.find(".tag").text()
+            },
+            success: function (result) {
+                if (result == "success") {
+                    tr.remove();
+                } else {
+                    message.showError("Ошибка");
+                }
             }
         });
     }
@@ -1024,6 +1113,13 @@ var tags = {
             });
         }
     },
+    getArray: function () {
+        var array = tags.$input.val().split(",");
+        for (var i = 0; i < array.length; i++) {
+            array[i] = array[i].trim();
+        }
+        return array;
+    },
     load: function (input) {
         var array = input.value.split(",");
         var s = array[array.length - 1].trim();
@@ -1041,10 +1137,7 @@ var tags = {
     },
     show: function (list) {
         var ul = $(".tag_ul");
-        var array = tags.$input.val().split(",");
-        for (var i = 0; i < array.length; i++) {
-            array[i] = array[i].trim();
-        }
+        var array = tags.getArray();
         $.each(list, function () {
             var name = this.name;
             var usage = this.usage;
@@ -1079,11 +1172,8 @@ var tags = {
         }
     },
     select: function (li) {
-        var array = tags.$input.val().split(",");
-        array[array.length - 1] = $(li).attr("name");
-        for (var i = 0; i < array.length; i++) {
-            array[i] = array[i].trim();
-        }
+        var array = tags.getArray();
+        array[array.length - 1] = $(li).attr("name").trim();
         tags.$input.val(array.join(", ") + ", ");
         tags.hide();
         tags.$input.blur(); // in order to scroll to the end

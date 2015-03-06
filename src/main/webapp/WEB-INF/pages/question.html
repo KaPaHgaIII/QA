@@ -1,16 +1,26 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:th="http://www.thymeleaf.org">
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
 <head>
     <meta charset="UTF-8">
     <title>Вопрос</title>
+
     <link rel="stylesheet" href="../../css/main.css" th:href="@{/css/main.css}">
+    <link rel="stylesheet" href="../../css/perfect-scrollbar.min.css" th:href="@{/css/perfect-scrollbar.min.css}">
 
 
+    <script type="text/javascript">
+        var loggedIn = false;
+        var myUsername = /*[[${#authentication.name}]]*/ 'Sebastian';
+    </script>
+    <script type="text/javascript" src="http://vk.com/js/api/openapi.js?116"></script>
     <script type="text/javascript" src="../../js/jquery-2.1.3.min.js" th:src="@{/js/jquery-2.1.3.min.js}"></script>
+    <script type="text/javascript" src="../../js/sockjs-0.3.4.js" th:src="@{/js/sockjs-0.3.4.js}"></script>
+    <script type="text/javascript" src="../../js/stomp.js" th:src="@{/js/stomp.js}"></script>
     <script type="text/javascript" src="../../js/perfect-scrollbar.min.js"
             th:src="@{/js/perfect-scrollbar.min.js}"></script>
-    <link rel="stylesheet" href="../../css/perfect-scrollbar.min.css" th:href="@{/css/perfect-scrollbar.min.css}">
+    <script type="text/javascript" src="../../js/engine.js" th:src="@{/js/engine.js}"></script>
 
     <script>
         $(document).ready(function () {
@@ -35,13 +45,23 @@
 
                 <table id="question_info">
             <tr>
-                <td colspan="2" id="question_title" th:text="${question.getTitle()}">Какой здесь будет заголовок?</td>
+                <td colspan="2" id="question_title">
+                    <span th:text="${question.getTitle()}">Какой здесь будет заголовок?</span>
+                    <div id="question_add_to_favourite" title="Подписаться на новые сообщения"
+                         sec:authorize="isAuthenticated()"
+                         th:class="${isFavourite !=null && isFavourite} ? 'active'"
+                         onclick="chat.sendFavourite();"></div>
+                </td>
             </tr>
             <tr>
                 <td id="question_vote" rowspan="2">
-                    <div id="question_vote_up" th:class="${vote !=null && vote.getSign()==1} ? 'voted'"></div>
+                    <div id="question_vote_up"
+                         th:class="${!#authorization.expression('isAuthenticated()')} ? 'disabled'"
+                         th:classappend="${vote !=null && vote.getSign()==1} ? 'voted'"></div>
                     <div id="question_votes" th:text="${question.getVotes()}">0</div>
-                    <div id="question_vote_down" th:class="${vote !=null && vote.getSign()==-1} ? 'voted'"></div>
+                    <div id="question_vote_down"
+                         th:class="${!#authorization.expression('isAuthenticated()')} ? 'disabled'"
+                         th:classappend="${vote !=null && vote.getSign()==-1} ? 'voted'"></div>
                 </td>
                 <td id="question_text" th:text="${question.getText()}">
                     Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
@@ -209,6 +229,10 @@
                     </table>
                 </div>
             </div>
+            <span id="reply">
+                <span id="reply_cancel" onclick="chat.cancelReply()" title="Отменить"></span>
+                <span id="reply_username"></span>,
+            </span>
             <input type="text" placeholder="Чтобы отправлять сообщения необходимо авторизироваться" id="message_input"
                    disabled>
             <input type="button" value="Отправить" id="send_message_button" disabled>

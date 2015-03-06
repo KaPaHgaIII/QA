@@ -31,6 +31,10 @@ public class Message {
     @JoinColumn(name = "uid")
     private User user;
 
+    @ManyToOne
+    @JoinColumn(name = "addressee")
+    private User addressee;
+
     @Column(name = "time")
     private Timestamp time = new Timestamp(new Date().getTime());
 
@@ -74,6 +78,14 @@ public class Message {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public User getAddressee() {
+        return addressee;
+    }
+
+    public void setAddressee(User addressee) {
+        this.addressee = addressee;
     }
 
     public Timestamp getTime() {

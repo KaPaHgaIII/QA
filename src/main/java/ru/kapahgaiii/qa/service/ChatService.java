@@ -12,9 +12,7 @@ import ru.kapahgaiii.qa.repository.interfaces.UserDAO;
 
 import javax.transaction.Transactional;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service("ChatService")
 public class ChatService {
@@ -82,6 +80,61 @@ public class ChatService {
 
     public List<Tag> getTags(String s) {
         return chatDAO.getTags(s);
+    }
+
+    public Tag getTagByName(String name) {
+        return chatDAO.getTagByName(name);
+    }
+
+    public boolean isFavouriteQuestion(Question question, User user) {
+        return chatDAO.getFavouriteQuestion(question, user) != null;
+    }
+
+    public boolean addToFavourite(Question question, User user) {
+        FavouriteQuestion favouriteQuestion = chatDAO.getFavouriteQuestion(question, user);
+        if (favouriteQuestion == null) {
+            favouriteQuestion = new FavouriteQuestion(question, user);
+            chatDAO.saveFavouriteQuestion(favouriteQuestion);
+            return true;
+        } else {
+            chatDAO.deleteFavouriteQuestion(favouriteQuestion);
+            return false;
+        }
+    }
+
+    public Set<Tag> parseTagsString(String s) {
+        String[] names = s.split(",");
+        Set<Tag> result = new HashSet<Tag>();
+        for (String name : names) {
+            if (!name.trim().equals("")) {
+                Tag tag = chatDAO.getTagByName(name);
+                if (tag == null) {
+                    tag = new Tag(name);
+                    chatDAO.addTag(tag);
+                }
+                result.add(tag);
+            }
+        }
+        return result;
+    }
+
+
+    public List<InterestingTag> findNewTags(Collection<Tag> tags, User user) {
+        /*List<InterestingTag> userTags = chatDAO.getUserInterestingTags(user);
+        for (Tag tag : tags) {
+            tags.remove(new InterestingTag(user, tag));
+        }*/
+        return null;
+
+    }
+
+    public List<InterestingTag> createTags(String tagsString, User user) {
+        String[] tags = tagsString.split(",");
+        List<InterestingTag> interestingTags = new ArrayList<InterestingTag>();
+        for (String tag : tags) {
+            interestingTags.add(new InterestingTag(user, new Tag(tag.trim())));
+        }
+        return interestingTags;
     }
 
 }

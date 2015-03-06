@@ -1,24 +1,33 @@
 package ru.kapahgaiii.qa.domain;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Entity
 @Table(name = "tags")
 public class Tag {
 
     @Id
+    @GeneratedValue
     @Column(name = "tag_id")
     private Integer tagId;
+
+    @ManyToOne
+    @JoinColumn(name = "real_id")
+    private Tag tag = null;
 
 
     @Column(name = "name")
     private String name;
 
     @Column(name = "usage")
-    private Integer usage;
+    private Integer usage = 0;
+
+    public Tag() {
+    }
+
+    public Tag(String name) {
+        this.name = name;
+    }
 
     public Integer getTagId() {
         return tagId;
@@ -42,5 +51,22 @@ public class Tag {
 
     public void setUsage(Integer usage) {
         this.usage = usage;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Tag tag = (Tag) o;
+
+        if (!name.equals(tag.name)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
     }
 }
