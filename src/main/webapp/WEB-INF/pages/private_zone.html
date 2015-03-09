@@ -22,6 +22,7 @@
 <div id="page_body">
     <div id="right_block_container">
         <div id="right_block" th:fragment="right_block">
+            <a href="new_question.html" th:href="@{/new_question}"><input type="button" value="Задать вопрос" id="new_question"></a>
             <div id="login_info">
                 <span sec:authentication="name" id="username">Логин</span>
                 |
@@ -39,7 +40,7 @@
             <div id="notifications_wr">
                 <div id="notifications_title">Уведомления:</div>
                 <div id="notifications_container">
-                    <div id="notifications" th:remove="body">
+                    <div id="notifications" th:remove="none">
                         <table class="notification">
                             <tr>
                                 <td rowspan="2" class="icon new_question">

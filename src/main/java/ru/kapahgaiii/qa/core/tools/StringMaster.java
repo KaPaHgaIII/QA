@@ -3,7 +3,7 @@ package ru.kapahgaiii.qa.core.tools;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 
-public class StringEncoder {
+public class StringMaster {
 
     private static MessageDigest md;
 

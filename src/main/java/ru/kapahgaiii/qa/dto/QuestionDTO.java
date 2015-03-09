@@ -26,22 +26,39 @@ public class QuestionDTO {
 
     private Set<Tag> tags;
 
+    private String tagsString;
+
     public QuestionDTO() {
     }
 
-    public QuestionDTO(Question question, boolean text) {
+    public QuestionDTO(Question question, boolean text, boolean nl2br) {
         this.id = question.getQuestionId();
         this.username = question.getUser().getUsername();
         this.title = question.getTitle();
-        this.text = text ? question.getText() : null;
+
+        if (text) {
+            this.text = nl2br ? question.getText().replace("\n", "<br>") : question.getText();
+        }
         this.votes = question.getVotes();
         this.messages = question.getMessages();
         this.updatedTime = question.getUpdatedTime();
         this.tags = question.getTags();
+
+        StringBuilder builder = new StringBuilder();
+        for (Tag tag : this.tags) {
+            builder.append(tag.getName());
+            builder.append(", "); // yes, I really want my string ends with ", "
+        }
+        this.tagsString = builder.toString();
+
+    }
+
+    public QuestionDTO(Question question, boolean text) {
+        this(question, text, false);
     }
 
     public QuestionDTO(Question question) {
-        this(question, false);
+        this(question, false, false);
     }
 
     public Integer getId() {
@@ -114,5 +131,13 @@ public class QuestionDTO {
 
     public void setTags(Set<Tag> tags) {
         this.tags = tags;
+    }
+
+    public String getTagsString() {
+        return tagsString;
+    }
+
+    public void setTagsString(String tagsString) {
+        this.tagsString = tagsString;
     }
 }

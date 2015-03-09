@@ -9,7 +9,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ru.kapahgaiii.qa.core.objects.Subscriber;
-import ru.kapahgaiii.qa.domain.*;
+import ru.kapahgaiii.qa.domain.Question;
+import ru.kapahgaiii.qa.domain.RestorePassword;
+import ru.kapahgaiii.qa.domain.Tag;
+import ru.kapahgaiii.qa.domain.User;
 import ru.kapahgaiii.qa.dto.ChatInitial;
 import ru.kapahgaiii.qa.dto.MessageDTO;
 import ru.kapahgaiii.qa.dto.Online;
@@ -20,7 +23,10 @@ import ru.kapahgaiii.qa.service.UserService;
 import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 
 @Controller
@@ -37,8 +43,6 @@ public class AjaxController {
     private SessionController sessionController;
 
     private String template(Model model) {
-//        model.addAttribute("guestsOnline", subscribeController.getGuestsOnline());
-//        model.addAttribute("usersOnline", subscribeController.getUsersOnline());
         return "template";
     }
 
@@ -59,27 +63,38 @@ public class AjaxController {
     }
 
     @RequestMapping("/question")
-    public String content(HttpServletRequest request, @RequestParam int id, Model model, Principal principal) {
+    public String question(HttpServletRequest request, @RequestParam Integer id, Model model, Principal principal) {
         if (!isAjax(request)) {
             return template(model);
         }
         Question question = chatService.getQuestionById(id);
-        model.addAttribute("question", new QuestionDTO(question, true));
+        model.addAttribute("question", new QuestionDTO(question, true, true));
         if (principal != null) {
             User user = userService.findByUsername(principal.getName());
-            model.addAttribute("vote",
-                    chatService.getQuestionVote(user, question));
-            model.addAttribute("isFavourite",
-                    chatService.isFavouriteQuestion(question, user));
+            model.addAttribute("vote", chatService.getQuestionVote(user, question));
+            model.addAttribute("isFavourite", chatService.isFavouriteQuestion(question, user));
         }
         return "question :: content";
+    }
+
+    @RequestMapping("/edit_question")
+    public String editQuestion(HttpServletRequest request, @RequestParam Integer id, Model model, Principal principal) {
+        Question question = chatService.getQuestionById(id);
+        if (principal == null || !question.getUser().getUsername().equals(principal.getName())) {
+            return "redirect:/question?id=" + id;
+        }
+        if (!isAjax(request)) {
+            return template(model);
+        }
+        model.addAttribute("question", new QuestionDTO(question, true));
+        return "edit_question :: content";
     }
 
     @RequestMapping("/add_to_favourite")
     public
     @ResponseBody
     boolean restorePassword(@RequestParam(value = "questionId") Integer questionId, Principal principal) {
-        if (principal==null) {
+        if (principal == null) {
             return false;
         }
         Question question = chatService.getQuestionById(questionId);
@@ -98,6 +113,68 @@ public class AjaxController {
         User user = userService.findByUsername(principal.getName());
         model.addAttribute("user", user);
         return "cp :: content";
+    }
+
+    @RequestMapping("/new_question")
+    public String newQuestion(HttpServletRequest request, Model model, Principal principal) {
+        if (principal == null) {
+            return "redirect:/";
+        }
+        if (!isAjax(request)) {
+            return template(model);
+        }
+        return "new_question :: content";
+    }
+
+    @RequestMapping("/save_new_question")
+    public
+    @ResponseBody
+    String saveNewQuestion(@RequestParam(value = "title") String title,
+                           @RequestParam(value = "text") String text,
+                           @RequestParam(value = "tags") String tagsString,
+                           Principal principal) {
+        if (principal == null) {
+            return "not_logined";
+        }
+        if (title.length() < 4) {
+            return "short_title";
+        }
+        if (text.length() < 10) {
+            return "short_text";
+        }
+        Set<Tag> tags = chatService.parseTagsString(tagsString);
+        if (tags.size() < 1 || tags.size() > 5) {
+            return "invalid_tags_count";
+        }
+        User user = userService.findByUsername(principal.getName());
+        Question question = chatService.createQuestion(user, title, text, tags);
+        return question.getQuestionId().toString();
+    }
+
+
+    @RequestMapping("/save_edited_question")
+    public
+    @ResponseBody
+    String saveEditedQuestion(Principal principal, @RequestParam(value = "id") Integer id,
+                              @RequestParam(value = "title") String title,
+                              @RequestParam(value = "text") String text,
+                              @RequestParam(value = "tags") String tagsString) {
+        Question question = chatService.getQuestionById(id);
+        if (principal == null || !question.getUser().getUsername().equals(principal.getName())) {
+            return "redirect:/question?id=" + id;
+        }
+        if (title.length() < 4) {
+            return "short_title";
+        }
+        if (text.length() < 10) {
+            return "short_text";
+        }
+        Set<Tag> tags = chatService.parseTagsString(tagsString);
+        if (tags.size() < 1 || tags.size() > 5) {
+            return "invalid_tags_count";
+        }
+        chatService.editQuestion(question, title, text, tags);
+        return "success";
     }
 
     @RequestMapping("/login")
@@ -349,7 +426,6 @@ public class AjaxController {
         userService.deleteInterestingTag(user, tag);
         return "success";
     }
-
 
 
     @RequestMapping("/loadChat/{chatId}")

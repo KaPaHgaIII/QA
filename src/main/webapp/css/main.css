@@ -48,7 +48,7 @@ h4 {
     margin-top: 15px;
 }
 
-input[type='text'], input[type='password'] {
+input[type='text'], input[type='password'], textarea {
     border: 1px solid #777777;
     padding: 2px 5px;
 }
@@ -205,7 +205,7 @@ input[type='button']:disabled, input[type='submit']:disabled {
     width: 330px;
     float: right;
     background-color: #EEEEEE;
-    margin-top: 36px;
+    margin-top: 0;
 }
 
 #content_container {
@@ -353,6 +353,17 @@ input[type='button']:disabled, input[type='submit']:disabled {
     padding-bottom: 10px;
 }
 
+#edit_question_button {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    background: url('images/edit_question.png') no-repeat 0 0;
+    cursor: pointer;
+    /*margin-left: -5px;*/
+    position: relative;
+    top: 4px;
+}
+
 #question_add_to_favourite {
     display: inline-block;
     width: 24px;
@@ -400,6 +411,7 @@ input[type='button']:disabled, input[type='submit']:disabled {
     cursor: default !important;
     background-position: -44px 0 !important;
 }
+
 #question_vote_down.disabled {
     cursor: default !important;
     background-position: -44px -22px !important;
@@ -627,6 +639,15 @@ input[type='button']:disabled, input[type='submit']:disabled {
     margin: 0 auto 20px auto;
 }
 
+#right_block #new_question {
+    margin: 5px 20px 0 20px;
+    float: left;
+}
+
+#right_block #login_info {
+    margin-top: 10px;
+}
+
 #right_block #login_info, #right_block #go_to_cp {
     padding: 5px 15px 0 0;
     text-align: right;
@@ -655,7 +676,7 @@ input[type='button']:disabled, input[type='submit']:disabled {
     width: 300px;
     overflow-y: hidden;
     margin: 0 auto;
-    box-shadow: 1px 1px 1px 1px #333333;
+    /*box-shadow: 1px 1px 1px 1px #333333;*/
     height: 400px;
 }
 
@@ -728,6 +749,7 @@ input[type='button']:disabled, input[type='submit']:disabled {
     color: #130e5a;
     font-weight: bold;
 }
+
 #edit_interesting_tags .tag_delete {
     line-height: 13px;
     font-size: 12px;
@@ -738,4 +760,21 @@ input[type='button']:disabled, input[type='submit']:disabled {
 
 #interesting_tags {
     width: 400px;
+}
+
+#new_question_table .label, #edit_question_table .label {
+    width: 76px;
+}
+
+#new_question_table .input input, #edit_question_table .input input {
+    width: 520px;
+}
+
+#new_question_table .textarea textarea, #edit_question_table .textarea textarea {
+    width: 598px;
+    height: 250px;
+}
+
+#edit_question_table #edit_cancel {
+    margin-right: 30px;
 }

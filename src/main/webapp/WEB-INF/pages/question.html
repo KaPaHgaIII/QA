@@ -41,12 +41,16 @@
     <div id="content" th:fragment="content">
         <input type="hidden" th:value="${question.getTitle()}" value="Вопрос" id="title">
         <input type="hidden" th:value="${question.getUsername()}" value="author" id="author">
-        <a href="index.html" th:href="@{/}" id="question_back">Назад к списку вопросов</a>
+        <!--<a href="index.html" th:href="@{/}" id="question_back">Назад к списку вопросов</a>-->
 
-                <table id="question_info">
+        <table id="question_info">
             <tr>
                 <td colspan="2" id="question_title">
                     <span th:text="${question.getTitle()}">Какой здесь будет заголовок?</span>
+                    <a id="edit_question_button" title="Редактировать вопрос"
+                       href="edit_question.html" th:href="@{/edit_question(id=${question.getId()})}"
+                       th:remove="${#authentication.name !=null && question.getUsername().equals(#authentication.name)}? none : all"></a>
+
                     <div id="question_add_to_favourite" title="Подписаться на новые сообщения"
                          sec:authorize="isAuthenticated()"
                          th:class="${isFavourite !=null && isFavourite} ? 'active'"
@@ -63,7 +67,7 @@
                          th:class="${!#authorization.expression('isAuthenticated()')} ? 'disabled'"
                          th:classappend="${vote !=null && vote.getSign()==-1} ? 'voted'"></div>
                 </td>
-                <td id="question_text" th:text="${question.getText()}">
+                <td id="question_text" th:utext="${question.getText()}">
                     Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
                     et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
                     aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse

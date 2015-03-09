@@ -127,17 +127,20 @@ function updateLinks() {
                     return true;
                 }
                 var url = $(a).attr("href"); //get url
-                var currentUrl = location.pathname + location.search;
-                if (url != currentUrl) {
-                    if (url != "/login") {
-                        history.pushState(null, null, url); //update address bar
-                    }
-                    getPage(url); //load page
-                }
+                goToPage(url);
                 event.preventDefault(); //prevent following the link
             });
         }
     });
+}
+function goToPage(url) {
+    var currentUrl = location.pathname + location.search;
+    if (url != currentUrl) {
+        if (url != "/login") {
+            history.pushState(null, null, url); //update address bar
+        }
+        getPage(url); //load page
+    }
 }
 function showOnline(users, guests) {
     var text = "На сайте ";
@@ -838,7 +841,11 @@ var utils = {
             value = value.replace(rep, '');
             input.value = value;
         }
+    },
+    isInteger: function (num) {
+        return (num ^ 0) === num;
     }
+
 };
 var register = {
     vkData: undefined,
@@ -995,7 +1002,7 @@ var cp = {
             type: "POST",
             url: "/vk_detach",
             success: function (result) {
-                getPage("/cp");
+                goToPage("/cp");
             }
         });
     },
@@ -1010,7 +1017,7 @@ var cp = {
             },
             success: function (result) {
                 if (result == "success") {
-                    getPage("/cp");
+                    goToPage("/cp");
                 } else {
                     restr.css("color", "red");
                     restr.text("Ошибка");
@@ -1203,5 +1210,57 @@ var tags = {
             }
 
         }
+    }
+};
+var newQuestion = {
+    ask: function () {
+        $.ajax({
+            type: "POST",
+            url: "/save_new_question",
+            data: {
+                title: $("#title").val(),
+                text: $("#text").val(),
+                tags: $("#tags").val()
+            },
+            success: function (result) {
+                if (result == "short_title") {
+                    message.showError("Заголовок должен быть длинее трёх символов")
+                } else if (result == "short_text") {
+                    message.showError("Вопрос должен быть длиннее 10 символов")
+                } else if (result == "invalid_tags_count") {
+                    message.showError("Пожалуйста, укажите от 1 до 5 ключевых слов")
+                } else if (parseInt(result)) {
+                    goToPage("/question?id=" + result);
+                }
+
+            }
+        });
+    }
+};
+var editQuestion = {
+    save: function () {
+        var question_id = $("#question_id").val();
+        $.ajax({
+            type: "POST",
+            url: "/save_edited_question",
+            data: {
+                id: question_id,
+                title: $("#title").val(),
+                text: $("#text").val(),
+                tags: $("#tags").val()
+            },
+            success: function (result) {
+                if (result == "short_title") {
+                    message.showError("Заголовок должен быть длинее трёх символов")
+                } else if (result == "short_text") {
+                    message.showError("Вопрос должен быть длиннее 10 символов")
+                } else if (result == "invalid_tags_count") {
+                    message.showError("Пожалуйста, укажите от 1 до 5 ключевых слов")
+                } else if (result == "success") {
+                    goToPage("/question?id=" + question_id);
+                }
+
+            }
+        });
     }
 };

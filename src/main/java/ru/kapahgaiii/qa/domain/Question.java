@@ -2,6 +2,7 @@ package ru.kapahgaiii.qa.domain;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -10,6 +11,7 @@ import java.util.Set;
 public class Question {
 
     @Id
+    @GeneratedValue
     @Column(name = "question_id")
     private Integer questionId;
 
@@ -25,13 +27,16 @@ public class Question {
     private String text;
 
     @Column(name = "votes")
-    private Integer votes;
+    private Integer votes = 0;
 
     @Column(name = "messages")
-    private Integer messages;
+    private Integer messages = 0;
 
     @Column(name = "updated_time")
     private Timestamp updatedTime;
+
+    @Column(name = "asked_time")
+    private Timestamp askedTime;
 
 
     @OneToMany(fetch = FetchType.EAGER)
@@ -40,6 +45,10 @@ public class Question {
             inverseJoinColumns = @JoinColumn(name = "tag_id"))
     private Set<Tag> tags = new HashSet<Tag>();
 
+    public Question() {
+        this.askedTime = new Timestamp((new Date()).getTime());
+        this.updatedTime = this.askedTime;
+    }
 
     public Integer getQuestionId() {
         return questionId;
@@ -109,6 +118,13 @@ public class Question {
         this.updatedTime = updatedTime;
     }
 
+    public Timestamp getAskedTime() {
+        return askedTime;
+    }
+
+    public void setAskedTime(Timestamp askedTime) {
+        this.askedTime = askedTime;
+    }
 
     public Set<Tag> getTags() {
         return tags;

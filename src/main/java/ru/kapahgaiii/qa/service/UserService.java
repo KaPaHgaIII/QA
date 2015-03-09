@@ -11,7 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import ru.kapahgaiii.qa.core.objects.MyPrincipal;
-import ru.kapahgaiii.qa.core.tools.StringEncoder;
+import ru.kapahgaiii.qa.core.tools.StringMaster;
 import ru.kapahgaiii.qa.domain.RestorePassword;
 import ru.kapahgaiii.qa.domain.Tag;
 import ru.kapahgaiii.qa.domain.User;
@@ -158,7 +158,7 @@ public class UserService implements org.springframework.security.core.userdetail
         RestorePassword restorePassword = new RestorePassword();
         restorePassword.setUser(user);
 
-        String hash = StringEncoder.sha256(user.getUsername() + restorePassword.getTime().getTime());
+        String hash = StringMaster.sha256(user.getUsername() + restorePassword.getTime().getTime());
 
         restorePassword.setHash(hash);
 

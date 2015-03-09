@@ -1,5 +1,6 @@
 package ru.kapahgaiii.qa.service;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.kapahgaiii.qa.controller.SessionController;
@@ -12,7 +13,10 @@ import ru.kapahgaiii.qa.repository.interfaces.UserDAO;
 
 import javax.transaction.Transactional;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Service("ChatService")
 public class ChatService {
@@ -24,12 +28,20 @@ public class ChatService {
     private UserDAO userDAO;
 
     @Autowired
+    private UserService userService;
+
+    @Autowired
     SessionController sessionController;
 
 
-    public void addMessage(Message message) {
+    public Message addMessage(Question question, User user, MessageDTO messageDTO) {
+        Message message = new Message(question, user, StringEscapeUtils.escapeHtml4(messageDTO.getText()));
+        if (messageDTO.getAddressee() != null) {
+            message.setAddressee(userService.findByUsername(messageDTO.getAddressee()));
+        }
         chatDAO.saveMessage(message);
         message.getQuestion().incrementMessages();
+        return message;
     }
 
     public Question getQuestionById(Integer id) {
@@ -109,7 +121,7 @@ public class ChatService {
             if (!name.trim().equals("")) {
                 Tag tag = chatDAO.getTagByName(name);
                 if (tag == null) {
-                    tag = new Tag(name);
+                    tag = new Tag(name.trim());
                     chatDAO.addTag(tag);
                 }
                 result.add(tag);
@@ -118,23 +130,22 @@ public class ChatService {
         return result;
     }
 
-
-    public List<InterestingTag> findNewTags(Collection<Tag> tags, User user) {
-        /*List<InterestingTag> userTags = chatDAO.getUserInterestingTags(user);
-        for (Tag tag : tags) {
-            tags.remove(new InterestingTag(user, tag));
-        }*/
-        return null;
-
+    public Question createQuestion(User user, String title, String text, Set<Tag> tags) {
+        Question question = new Question();
+        question.setUser(user);
+        question.setTitle(title);
+        question.setText(StringEscapeUtils.escapeHtml4(text));
+        question.getTags().addAll(tags);
+        chatDAO.saveQuestion(question);
+        return question;
     }
 
-    public List<InterestingTag> createTags(String tagsString, User user) {
-        String[] tags = tagsString.split(",");
-        List<InterestingTag> interestingTags = new ArrayList<InterestingTag>();
-        for (String tag : tags) {
-            interestingTags.add(new InterestingTag(user, new Tag(tag.trim())));
-        }
-        return interestingTags;
+    public void editQuestion(Question question, String title, String text, Set<Tag> tags) {
+        question.setTitle(title);
+        question.setText(StringEscapeUtils.escapeHtml4(text));
+        question.getTags().clear();
+        question.getTags().addAll(tags);
+        chatDAO.updateQuestion(question);
     }
 
 }
