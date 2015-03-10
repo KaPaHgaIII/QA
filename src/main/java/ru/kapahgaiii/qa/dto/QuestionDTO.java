@@ -1,5 +1,6 @@
 package ru.kapahgaiii.qa.dto;
 
+import ru.kapahgaiii.qa.core.tools.StringMaster;
 import ru.kapahgaiii.qa.domain.Question;
 import ru.kapahgaiii.qa.domain.Tag;
 
@@ -44,12 +45,7 @@ public class QuestionDTO {
         this.updatedTime = question.getUpdatedTime();
         this.tags = question.getTags();
 
-        StringBuilder builder = new StringBuilder();
-        for (Tag tag : this.tags) {
-            builder.append(tag.getName());
-            builder.append(", "); // yes, I really want my string ends with ", "
-        }
-        this.tagsString = builder.toString();
+        this.tagsString = StringMaster.join(this.tags, ", ");
 
     }
 

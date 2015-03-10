@@ -36,11 +36,17 @@ public class User {
     @Column(name = "reputation")
     private Integer reputation = 0;
 
-    @OneToMany(fetch = FetchType.EAGER)
+    @OneToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "interesting_tags",
             joinColumns = @JoinColumn(name = "uid"),
             inverseJoinColumns = @JoinColumn(name = "tag_id"))
     private Set<Tag> interestingTags = new HashSet<Tag>();
+
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "favourite_questions",
+            joinColumns = @JoinColumn(name = "uid"),
+            inverseJoinColumns = @JoinColumn(name = "question_id"))
+    private Set<Question> favouriteQuestions = new HashSet<Question>();
 
     public Integer getUid() {
         return uid;
@@ -73,6 +79,7 @@ public class User {
     public void setPassword(String password) {
         this.password = password;
     }
+
     public void encodeAndSetPassword(String password) {
         this.password = passwordEncoder.encode(password);
     }
@@ -111,6 +118,14 @@ public class User {
 
     public void setInterestingTags(Set<Tag> interestingTags) {
         this.interestingTags = interestingTags;
+    }
+
+    public Set<Question> getFavouriteQuestions() {
+        return favouriteQuestions;
+    }
+
+    public void setFavouriteQuestions(Set<Question> favouriteQuesitons) {
+        this.favouriteQuestions = favouriteQuesitons;
     }
 
     @Override

@@ -677,7 +677,9 @@ input[type='button']:disabled, input[type='submit']:disabled {
     overflow-y: hidden;
     margin: 0 auto;
     /*box-shadow: 1px 1px 1px 1px #333333;*/
-    height: 400px;
+    height: 415px;
+    padding-top: 2px;
+    border-top: 1px solid #CCCCCC;
 }
 
 #notifications_wr #notifications_container #notifications {
@@ -692,6 +694,9 @@ input[type='button']:disabled, input[type='submit']:disabled {
     margin-bottom: 3px;
     padding-top: 3px;
     border-top: 1px solid #CCCCCC;
+}
+#notifications_wr #notifications .notification:first-of-type {
+    border-top: none;
 }
 
 #notifications_wr #notifications .notification .icon {

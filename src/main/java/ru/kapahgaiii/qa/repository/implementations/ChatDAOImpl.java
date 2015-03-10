@@ -209,7 +209,7 @@ public class ChatDAOImpl implements ChatDAO {
         sessionFactory.getCurrentSession().save(tag);
     }
 
-    @Override
+    /*@Override
     @SuppressWarnings("unchecked")
     public FavouriteQuestion getFavouriteQuestion(Question question, User user) {
         List<FavouriteQuestion> list = sessionFactory.getCurrentSession()
@@ -232,5 +232,5 @@ public class ChatDAOImpl implements ChatDAO {
     @Override
     public void deleteFavouriteQuestion(FavouriteQuestion favouriteQuestion) {
         sessionFactory.getCurrentSession().delete(favouriteQuestion);
-    }
+    }*/
 }

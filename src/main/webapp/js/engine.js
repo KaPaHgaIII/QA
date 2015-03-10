@@ -14,7 +14,6 @@ $(function () {
 //first time come or page refresh
 $(document).ready(function () {
 
-
     //check access
     if (loggedIn) {
         var denied = ["/lost_password", "/register"];
@@ -24,7 +23,6 @@ $(document).ready(function () {
     }
 
     //init VK
-
     VK.init({apiId: 4784902});
 
     connectWebSocket();
@@ -59,6 +57,10 @@ $(document).ready(function () {
             getPage(url);
         }, false);
     }, 1);
+
+    //subscribe for notifications
+    //if not logged in - only for refresh button on index page
+    notifications.subscribe();
 });
 function getPage(url, right) {
     if (!right) {
@@ -91,9 +93,10 @@ function loadPage(url, data, right) {
             $("#logout_button").click(function () {
                 $("#logout_form").submit();
             });
-            $("#notifications_wr").perfectScrollbar({
+            $("#notifications_container").perfectScrollbar({
                 includePadding: true
             });
+            notifications.getNotifications();
         }
     } else {
         setTitle();
@@ -187,7 +190,7 @@ var questions = {
     },
     subscribe: function () {
         if (stompConnected) {
-            this.messagesSubscription = stompClient.subscribe("/questions", function (message) {
+            this.subscription = stompClient.subscribe("/questions", function (message) {
                 var info = JSON.parse(message.body);
                 if (info.type == "subscribers") {
                     questions.setSubscribers(info.questionId, info.value);
@@ -299,6 +302,17 @@ var questions = {
             }
             return b.updatedTime - a.updatedTime;
         });
+    },
+    refresh: function() {
+        $("#questions").remove();
+        $("#questions_top").after("<div id='questions'></div>");
+        $("#refresh_count").val(0);
+        $("#refresh_button").hide();
+        questions.loaded = [];
+        questions.shown = [];
+        questions.earliestTime = new Date().getTime() + 86400000;
+        questions.earliestIds = [];
+        questions.loadMore();
     }
 };
 var chat = {
@@ -622,8 +636,10 @@ var chat = {
     receiveFavourite: function (result) {
         if (result) {
             $("#question_add_to_favourite").addClass("active");
+            favouriteQuestions.push(chat.chatId);
         } else {
             $("#question_add_to_favourite").removeClass("active");
+            favouriteQuestions.splice(favouriteQuestions.indexOf(chat.chatId), 1);
         }
     },
     sendQuestionVote: function (value) {
@@ -721,6 +737,7 @@ var chat = {
         $("#reply_username").text(username);
         messageInput.width(chat.messageInputWidth - reply.outerWidth());
         chat.addressee = username;
+        messageInput.focus();
     },
     cancelReply: function () {
         var reply = $("#reply");
@@ -728,6 +745,7 @@ var chat = {
         reply.css("display", "none");
         messageInput.width(chat.messageInputWidth);
         chat.addressee = undefined;
+        messageInput.focus();
     }
 };
 var utils = {
@@ -844,6 +862,25 @@ var utils = {
     },
     isInteger: function (num) {
         return (num ^ 0) === num;
+    },
+    isIntersection: function (one, two) {
+        var tmp = {};
+        $.each(one, function () {
+            var a = this;
+            tmp[a] = 1;
+        });
+        $.each(two, function () {
+            var a = this;
+            tmp[a] = 1;
+        });
+        return one.length + two.length != utils.getKeysCount(tmp);
+    },
+    getKeysCount: function (obj) {
+        var counter = 0;
+        for (var key in obj) {
+            counter++;
+        }
+        return counter;
     }
 
 };
@@ -1262,5 +1299,107 @@ var editQuestion = {
 
             }
         });
+    }
+};
+var notifications = {
+    basicSubscription: undefined,
+    userSubscription: undefined,
+    subscribe: function () {
+        if (stompConnected) {
+            notifications.basicSubscription = stompClient.subscribe("/notifications", function (message) {
+                notifications.receiveNotification(message);
+            });
+            if (loggedIn) {
+                notifications.userSubscription = stompClient.subscribe("/user/" + myUsername + "/notifications",
+                    function (message) {
+                        notifications.receiveNotification(message);
+                    });
+            }
+        } else { // Please, try again later
+            setTimeout(function () {
+                notifications.subscribe();
+            }, 300);
+        }
+    },
+    receiveNotification: function (message) {
+        var n = JSON.parse(message.body);
+        if (n.type == "new_question") {
+            if (utils.isIntersection(n.names, interestingTags)) {
+                notifications.showNotification(n);
+            }
+        } else if (n.type == "new_message") {
+            if (favouriteQuestions.indexOf(parseInt(n.param)) != -1) {
+                notifications.showNotification(n);
+            }
+        } else if (n.type == "addressed_message") {
+            notifications.showNotification(n);
+        }
+
+        if ((window.location.pathname == "/" || window.location.pathname == "/index") &&
+            (n.type == "new_question" || n.type == "new_message")) {
+            var count_holder = $("#refresh_count");
+            var count = parseInt(count_holder.val());
+            var button = $("#refresh_button");
+            button.val("Обновить список (" + ++count + ")");
+            button.show();
+            count_holder.val(count);
+        }
+
+        updateLinks();
+    },
+    unsubscribe: function () {
+        if (notifications.basicSubscription) {
+            notifications.basicSubscription.unsubscribe();
+        }
+        if (notifications.userSubscription) {
+            notifications.userSubscription.unsubscribe();
+        }
+    },
+    getNotifications: function () {
+        $.ajax({
+            type: "POST",
+            url: "/get_notifications",
+            success: function (result) {
+                notifications.showNotifications(result);
+            }
+        });
+    },
+    showNotifications: function (list) {
+        $.each(list, function () {
+            notifications.showNotification(this);
+        });
+        updateLinks();
+    },
+    showNotification: function (n) {
+        var notificationsDOM = $("#notifications");
+
+        notificationsDOM.find(".notification[type='" + n.type + "'][param='" + n.param + "']").remove();
+
+        var i = 0;
+        var html = [];
+        html[i++] = "<table class='notification' type='";
+        html[i++] = n.type;
+        html[i++] = "' param='";
+        html[i++] = n.param;
+        html[i++] = "'><tr><td rowspan='2' class='icon ";
+        html[i++] = n.type;
+        html[i++] = "'><div></div></td><td class='time'>";
+        html[i++] = utils.formatDate(new Date(n.time));
+        html[i++] = "</td></tr><tr><td class='text'><a href='/";
+
+        var questionTypes = ["new_question", "new_message", "addressed_message"];
+        var url = "";
+        if (questionTypes.indexOf(n.type) != -1) {
+            url = "question?id=" + n.param;
+        }
+
+        html[i++] = url;
+        html[i++] = "'>";
+        html[i++] = n.text;
+        html[i++] = "</a></td></tr></table>";
+
+        notificationsDOM.append(html.join(""));
+
+        $("#notifications_container").scrollTop(notificationsDOM.height() + 9999999);
     }
 };

@@ -20,7 +20,11 @@
         <table id="questions_top">
             <tr>
                 <td><h3>Вопросы:</h3></td>
-                <td id="refresh"><input type="button" value="Обновить список"></td>
+                <td id="refresh">
+                    <input type="hidden" value="0" id="refresh_count">
+                    <input type="button" value="Обновить список" id="refresh_button" onclick="questions.refresh()"
+                           style="display: none">
+                </td>
             </tr>
         </table>
 

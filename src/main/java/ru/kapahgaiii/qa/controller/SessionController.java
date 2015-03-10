@@ -125,7 +125,7 @@ public class SessionController implements ApplicationListener<ApplicationEvent> 
         Session session = sessions.get(headers.getSessionId());
         session.addSubscription(subscription);
 
-        //save subscription
+        //save basicSubscription
         chatSessions.putIfAbsent(question, new HashSet<Session>());
         chatSessions.get(question).add(session);
 
@@ -139,14 +139,14 @@ public class SessionController implements ApplicationListener<ApplicationEvent> 
         //getting session
         Session session = sessions.get(headers.getSessionId());
 
-        //getting subscription
+        //getting basicSubscription
         Subscription subscription = session.getSubscriptions().get(headers.getSubscriptionId());
 
         //getting question
         Integer questionId = Integer.parseInt(subscription.getDestination().substring(15));
         Question question = chatService.getQuestionById(questionId);
 
-        //remove chat subscription
+        //remove chat basicSubscription
         session.removeSubscription(subscription);
         chatSessions.get(question).remove(session);
 

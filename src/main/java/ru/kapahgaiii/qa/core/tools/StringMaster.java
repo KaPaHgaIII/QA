@@ -2,6 +2,7 @@ package ru.kapahgaiii.qa.core.tools;
 
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
+import java.util.Collection;
 
 public class StringMaster {
 
@@ -29,5 +30,32 @@ public class StringMaster {
             return null;
         }
 
+    }
+
+    public static String join(Collection<?> objects, String delimiter) {
+        return join(objects, delimiter, null, null);
+    }
+
+    public static String join(Collection<?> objects, String delimiter, String start, String end) {
+        StringBuilder builder = new StringBuilder();
+
+        if (start != null) {
+            builder.append(start);
+        }
+
+        int i = 0;
+        for (Object o : objects) {
+            if (i != 0) {
+                builder.append(delimiter);
+            }
+            builder.append(o.toString());
+            i++;
+        }
+
+        if (end != null) {
+            builder.append(end);
+        }
+
+        return builder.toString();
     }
 }

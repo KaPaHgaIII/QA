@@ -22,6 +22,9 @@ import java.util.Set;
 public class ChatService {
 
     @Autowired
+    private SocketService socketService;
+
+    @Autowired
     private ChatDAO chatDAO;
 
     @Autowired
@@ -31,7 +34,10 @@ public class ChatService {
     private UserService userService;
 
     @Autowired
-    SessionController sessionController;
+    private SessionController sessionController;
+
+    @Autowired
+    private NotificationsService notificationsService;
 
 
     public Message addMessage(Question question, User user, MessageDTO messageDTO) {
@@ -41,6 +47,15 @@ public class ChatService {
         }
         chatDAO.saveMessage(message);
         message.getQuestion().incrementMessages();
+
+        socketService.sendChatMessage(message);
+        socketService.sendQuestionInfo("messages", question, question.getMessages());
+        socketService.sendNotification(notificationsService.createNewMessageNotification(message));
+        if (message.getAddressee() != null) {
+            socketService.sendNotification(notificationsService.createAddressedMessageNotification(message),
+                    message.getAddressee().getUsername());
+        }
+
         return message;
     }
 
@@ -99,17 +114,17 @@ public class ChatService {
     }
 
     public boolean isFavouriteQuestion(Question question, User user) {
-        return chatDAO.getFavouriteQuestion(question, user) != null;
+        return user.getFavouriteQuestions().contains(question);
     }
 
     public boolean addToFavourite(Question question, User user) {
-        FavouriteQuestion favouriteQuestion = chatDAO.getFavouriteQuestion(question, user);
-        if (favouriteQuestion == null) {
-            favouriteQuestion = new FavouriteQuestion(question, user);
-            chatDAO.saveFavouriteQuestion(favouriteQuestion);
+        if (!isFavouriteQuestion(question, user)) {
+            user.getFavouriteQuestions().add(question);
+            userDAO.updateUser(user);
             return true;
         } else {
-            chatDAO.deleteFavouriteQuestion(favouriteQuestion);
+            user.getFavouriteQuestions().remove(question);
+            userDAO.updateUser(user);
             return false;
         }
     }
@@ -118,10 +133,11 @@ public class ChatService {
         String[] names = s.split(",");
         Set<Tag> result = new HashSet<Tag>();
         for (String name : names) {
-            if (!name.trim().equals("")) {
+            String correctName = StringEscapeUtils.escapeHtml4(name).trim();
+            if (!correctName.equals("")) {
                 Tag tag = chatDAO.getTagByName(name);
                 if (tag == null) {
-                    tag = new Tag(name.trim());
+                    tag = new Tag(correctName);
                     chatDAO.addTag(tag);
                 }
                 result.add(tag);
@@ -133,15 +149,18 @@ public class ChatService {
     public Question createQuestion(User user, String title, String text, Set<Tag> tags) {
         Question question = new Question();
         question.setUser(user);
-        question.setTitle(title);
+        question.setTitle(StringEscapeUtils.escapeHtml4(title));
         question.setText(StringEscapeUtils.escapeHtml4(text));
         question.getTags().addAll(tags);
         chatDAO.saveQuestion(question);
+
+        socketService.sendNotification(notificationsService.createNewQuestionNotification(question));
+
         return question;
     }
 
     public void editQuestion(Question question, String title, String text, Set<Tag> tags) {
-        question.setTitle(title);
+        question.setTitle(StringEscapeUtils.escapeHtml4(title));
         question.setText(StringEscapeUtils.escapeHtml4(text));
         question.getTags().clear();
         question.getTags().addAll(tags);

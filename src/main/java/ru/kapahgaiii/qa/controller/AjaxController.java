@@ -13,11 +13,10 @@ import ru.kapahgaiii.qa.domain.Question;
 import ru.kapahgaiii.qa.domain.RestorePassword;
 import ru.kapahgaiii.qa.domain.Tag;
 import ru.kapahgaiii.qa.domain.User;
-import ru.kapahgaiii.qa.dto.ChatInitial;
-import ru.kapahgaiii.qa.dto.MessageDTO;
-import ru.kapahgaiii.qa.dto.Online;
-import ru.kapahgaiii.qa.dto.QuestionDTO;
+import ru.kapahgaiii.qa.dto.*;
 import ru.kapahgaiii.qa.service.ChatService;
+import ru.kapahgaiii.qa.service.NotificationsService;
+import ru.kapahgaiii.qa.service.SocketService;
 import ru.kapahgaiii.qa.service.UserService;
 
 import javax.servlet.http.HttpServletRequest;
@@ -32,6 +31,8 @@ import java.util.Set;
 @Controller
 public class AjaxController {
 
+    @Autowired
+    private NotificationsService notificationsService;
 
     @Autowired
     private ChatService chatService;
@@ -42,22 +43,38 @@ public class AjaxController {
     @Autowired
     private SessionController sessionController;
 
-    private String template(Model model) {
+    @Autowired
+    private SocketService socketService;
+
+    private String template(Model model, Principal principal) {
+        if (principal != null) {
+            User user = userService.findByUsername(principal.getName());
+            List<String> tags = new ArrayList<String>();
+            for (Tag tag : user.getInterestingTags()) {
+                tags.add(tag.getName());
+            }
+            List<Integer> questions = new ArrayList<Integer>();
+            for (Question question : user.getFavouriteQuestions()) {
+                questions.add(question.getQuestionId());
+            }
+            model.addAttribute("interestingTags", tags);
+            model.addAttribute("favouriteQuestions", questions);
+        }
         return "template";
     }
 
     @RequestMapping("/not_found")
-    public String notFound(HttpServletRequest request, Model model) {
+    public String notFound(HttpServletRequest request, Model model, Principal principal) {
         if (!isAjax(request)) {
-            return template(model);
+            return template(model, principal);
         }
         return "not_found :: content";
     }
 
     @RequestMapping({"/", "/index"})
-    public String index(HttpServletRequest request, Model model) {
+    public String index(HttpServletRequest request, Model model, Principal principal) {
         if (!isAjax(request)) {
-            return template(model);
+            return template(model, principal);
         }
         return "index :: content";
     }
@@ -65,7 +82,7 @@ public class AjaxController {
     @RequestMapping("/question")
     public String question(HttpServletRequest request, @RequestParam Integer id, Model model, Principal principal) {
         if (!isAjax(request)) {
-            return template(model);
+            return template(model, principal);
         }
         Question question = chatService.getQuestionById(id);
         model.addAttribute("question", new QuestionDTO(question, true, true));
@@ -84,7 +101,7 @@ public class AjaxController {
             return "redirect:/question?id=" + id;
         }
         if (!isAjax(request)) {
-            return template(model);
+            return template(model, principal);
         }
         model.addAttribute("question", new QuestionDTO(question, true));
         return "edit_question :: content";
@@ -108,7 +125,7 @@ public class AjaxController {
             return "redirect:/";
         }
         if (!isAjax(request)) {
-            return template(model);
+            return template(model, principal);
         }
         User user = userService.findByUsername(principal.getName());
         model.addAttribute("user", user);
@@ -121,7 +138,7 @@ public class AjaxController {
             return "redirect:/";
         }
         if (!isAjax(request)) {
-            return template(model);
+            return template(model, principal);
         }
         return "new_question :: content";
     }
@@ -183,15 +200,15 @@ public class AjaxController {
             return "redirect:/";
         }
         if (!isAjax(request)) {
-            return template(model);
+            return template(model, principal);
         }
         return "login :: right_block";
     }
 
     @RequestMapping("/login_error")
-    public String loginError(HttpServletRequest request, Model model) {
+    public String loginError(HttpServletRequest request, Model model, Principal principal) {
         if (!isAjax(request)) {
-            return template(model);
+            return template(model, principal);
         }
         return "login_error :: content";
     }
@@ -202,7 +219,7 @@ public class AjaxController {
             return "redirect:/";
         }
         if (!isAjax(request)) {
-            return template(model);
+            return template(model, principal);
         }
         return "lost_password :: content";
     }
@@ -246,8 +263,11 @@ public class AjaxController {
 
     @RequestMapping("/register")
     public String register(HttpServletRequest request, Model model, Principal principal) {
+        if (principal != null) {
+            return "redirect:/";
+        }
         if (!isAjax(request)) {
-            return template(model);
+            return template(model, principal);
         }
         return "register :: content";
     }
@@ -474,6 +494,16 @@ public class AjaxController {
     @ResponseBody
     List<Tag> getTags(@RequestParam(value = "s") String s) {
         return chatService.getTags(s);
+    }
+
+    @RequestMapping("/get_notifications")
+    public
+    @ResponseBody
+    List<Notification> getNotifications(Principal principal) {
+        if (principal == null) {
+            return null;
+        }
+        return notificationsService.getNotifications(userService.findByUsername(principal.getName()));
     }
 
     private boolean isAjax(HttpServletRequest request) {

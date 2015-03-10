@@ -32,12 +32,8 @@ public class WebSocketController {
     public void chatMessage(MessageDTO messageDTO, @DestinationVariable String chatId, Principal principal) {
         if (principal != null) {
             Question question = chatService.getQuestionById(Integer.parseInt(chatId));
-
-            Message message = chatService.addMessage(question,
+            chatService.addMessage(question,
                     userService.findByUsername(principal.getName()), messageDTO);
-
-            socketService.sendChatMessage(message);
-            socketService.sendQuestionInfo("messages", question, question.getMessages());
         }
     }
 
