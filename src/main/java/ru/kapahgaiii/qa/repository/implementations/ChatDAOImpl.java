@@ -157,7 +157,7 @@ public class ChatDAOImpl implements ChatDAO {
     @SuppressWarnings("unchecked")
     public boolean voteMessage(User user, Message message) {
         List<Object[]> list = sessionFactory.getCurrentSession()
-                .createSQLQuery("dbo.vote_message :uid, :message_id")
+                .createSQLQuery("CALL vote_message(:uid, :message_id)")
                 .setParameter("uid", user.getUid())
                 .setParameter("message_id", message.getMessageId())
                 .list();
@@ -169,7 +169,7 @@ public class ChatDAOImpl implements ChatDAO {
     @SuppressWarnings("unchecked")
     public boolean voteQuestion(User user, Question question, int sign) {
         List<Object[]> list = sessionFactory.getCurrentSession()
-                .createSQLQuery("dbo.vote_question :uid, :question_id, :sign")
+                .createSQLQuery("CALL vote_question(:uid, :question_id, :sign)")
                 .setParameter("uid", user.getUid())
                 .setParameter("question_id", question.getQuestionId())
                 .setParameter("sign", sign)

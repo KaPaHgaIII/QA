@@ -37,7 +37,8 @@ public class HibernateConfig {
     public Properties getHibernateProperties() {
         Properties p = new Properties();
         p.put("hibernate.enable_lazy_load_no_trans","true");
-        p.put("hibernate.dialect","org.hibernate.dialect.SQLServerDialect");
+//        p.put("hibernate.dialect","org.hibernate.dialect.SQLServerDialect");
+        p.put("hibernate.dialect","org.hibernate.dialect.MySQLDialect");
         p.put("hibernate.show_sql","false");
         p.put("hibernate.format_sql", "true");
         return p;

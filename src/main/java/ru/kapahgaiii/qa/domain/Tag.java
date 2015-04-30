@@ -19,7 +19,7 @@ public class Tag {
     @Column(name = "name")
     private String name;
 
-    @Column(name = "usage")
+    @Column(name = "usage_count")
     private Integer usage = 0;
 
     public Tag() {

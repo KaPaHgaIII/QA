@@ -23,7 +23,7 @@ public class NotificationsDAOImpl implements NotificationsDAO {
     @SuppressWarnings("unchecked")
     public List<Notification> getNotifications(User user) {
         List<Object[]> list = sessionFactory.getCurrentSession()
-                .createSQLQuery("dbo.select_notifications :uid")
+                .createSQLQuery("CALL select_notifications(:uid)")
                 .setParameter("uid", user.getUid())
                 .list();
         List<Notification> notifications = new ArrayList<Notification>();
