@@ -16,7 +16,9 @@
 <div id="content_container">
     <div id="content" th:fragment="content">
         <input type="hidden" value="Вопрос-Ответ 2.0" id="title">
-
+        <script type="text/javascript" th:inline="javascript">
+            questions.searchQuery = /*[[${searchQuery}]]*/ undefined;
+        </script>
         <table id="questions_top">
             <tr>
                 <td><h3>Вопросы:</h3></td>
@@ -26,6 +28,19 @@
                            style="display: none">
                 </td>
             </tr>
+        </table>
+
+        <table id="questions_search_table" style="display: none;">
+            <tr>
+                <td>
+                    Поиск:
+                    <input type="text" id="search_main_input" th:value="${searchQuery}"
+                           onkeydown="if(event.keyCode == 13){questions.search(this.value)}">
+                    <input type="button" value="Найти"
+                           onclick="questions.search(document.getElementById('search_main_input').value)">
+                </td>
+            </tr>
+            <td class="tags"></td>
         </table>
 
 

@@ -1,6 +1,10 @@
 package ru.kapahgaiii.qa.repository.implementations;
 
+import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.CriteriaSpecification;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ru.kapahgaiii.qa.domain.*;
@@ -71,24 +75,30 @@ public class ChatDAOImpl implements ChatDAO {
         sessionFactory.getCurrentSession().merge(message);
     }
 
-
-    @Override
     @SuppressWarnings("unchecked")
-    public List<Question> getQuestionsList(Timestamp time, Integer[] exclude) {
-        int limit = 15;
-        if (exclude == null) {
-            return sessionFactory.getCurrentSession()
-                    .createQuery("from Question where updatedTime <= :time order by updatedTime desc")
-                    .setParameter("time", time)
-                    .setMaxResults(limit)
-                    .list();
+    public List<Question> getQuestionsList(Timestamp time, Integer[] exclude, String searchQuery, String[] tags) {
+        List questionIds = null;
+        if (tags!=null && tags.length != 0){
+            questionIds = sessionFactory.getCurrentSession().createSQLQuery("" +
+                    "SELECT question_id FROM question_tags LEFT JOIN tags ON question_tags.tag_id = tags.tag_id WHERE tags.name IN :tags GROUP BY question_id HAVING COUNT(tags.tag_id)=:count" +
+                    "").setParameterList("tags", tags).setParameter("count",tags.length).list();
         }
-        return sessionFactory.getCurrentSession()
-                .createQuery("from Question where updatedTime <= :time and questionId not in (:ids) order by updatedTime desc")
-                .setParameter("time", time)
-                .setParameterList("ids", exclude)
-                .setMaxResults(limit)
-                .list();
+        int limit = 15;
+        Criteria criteria = sessionFactory.getCurrentSession().createCriteria(Question.class);
+        criteria.add(Restrictions.le("updatedTime", time));
+        if (searchQuery != null) {
+            criteria.add(Restrictions.like("title", '%' + searchQuery + '%'));
+        }
+        if (exclude != null) {
+            criteria.add(Restrictions.not(Restrictions.in("questionId", exclude)));
+        }
+        if (tags != null && tags.length > 0) {
+            criteria.add(Restrictions.in("questionId", questionIds));
+        }
+        criteria.setResultTransformer(CriteriaSpecification.DISTINCT_ROOT_ENTITY);
+        criteria.addOrder(Order.desc("updatedTime"));
+        criteria.setMaxResults(limit);
+        return criteria.list();
     }
 
     @Override

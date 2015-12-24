@@ -42,6 +42,10 @@
             <td id="online">
 
             </td>
+            <td style="width: 99%"></td>
+            <td>
+                <input type="text" placeholder="Поиск по вопросам" onkeydown="if(event.keyCode == 13){questions.search(this.value)}">
+            </td>
             <!--<td id="header_login">
                 <span sec:authorize="isAuthenticated()">
                     <span sec:authentication="name" id="username">Логин</span> |

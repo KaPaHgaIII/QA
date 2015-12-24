@@ -14,7 +14,7 @@ VK.Widgets.Auth("vk_auth", {
                     vkRestr.css("color", "red");
                     vkRestr.text("Этот аккаунт ВКонтакте уже привязан к другому пользователю")
                 } else if (result == "success") {
-                    window.location.reload();
+                    goToPage("/cp", true);
                 }
             }
         });

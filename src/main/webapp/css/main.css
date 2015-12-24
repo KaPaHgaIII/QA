@@ -183,8 +183,13 @@ input[type='button']:disabled, input[type='submit']:disabled {
     height: 35px;
 }
 
+#header td {
+    white-space: nowrap;
+}
+
 #header #online {
     font-size: 11px;
+    padding-left: 30px;
 }
 
 #header #header_login {
@@ -243,6 +248,10 @@ input[type='button']:disabled, input[type='submit']:disabled {
     text-align: right;
 }
 
+#questions_search_table {
+    margin-top: 20px;
+}
+
 #questions {
     margin: 15px 0;
 }
@@ -294,7 +303,7 @@ input[type='button']:disabled, input[type='submit']:disabled {
     color: #130e5a;
 }
 
-#questions .item .tags span, #question_tags span {
+.tags span, #question_tags span {
     list-style: none;
     margin: 2px 0;
     background-color: #DFE9F0;
@@ -303,6 +312,7 @@ input[type='button']:disabled, input[type='submit']:disabled {
     padding: 2px 4px;
     white-space: nowrap;
     font-size: 13px;
+    cursor: pointer;
 }
 
 #questions .item .time {

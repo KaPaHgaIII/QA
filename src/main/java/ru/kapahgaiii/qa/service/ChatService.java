@@ -85,8 +85,8 @@ public class ChatService {
         return sessionController.getChatSubscribers(question);
     }
 
-    public List<QuestionDTO> getQuestionDTOsList(Timestamp time, Integer[] exclude) {
-        List<Question> questions = chatDAO.getQuestionsList(time, exclude);
+    public List<QuestionDTO> getQuestionDTOsList(Timestamp time, Integer[] exclude, String searchQuery, String[] tags) {
+        List<Question> questions = chatDAO.getQuestionsList(time, exclude, searchQuery, tags);
         List<QuestionDTO> questionDTOs = new ArrayList<QuestionDTO>();
         for (Question question : questions) {
             QuestionDTO questionDTO = new QuestionDTO(question);
@@ -135,7 +135,7 @@ public class ChatService {
         for (String name : names) {
             String correctName = StringEscapeUtils.escapeHtml4(name).trim();
             if (!correctName.equals("")) {
-                Tag tag = chatDAO.getTagByName(name);
+                Tag tag = chatDAO.getTagByName(correctName);
                 if (tag == null) {
                     tag = new Tag(correctName);
                     chatDAO.addTag(tag);

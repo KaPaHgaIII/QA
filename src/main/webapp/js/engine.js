@@ -99,6 +99,9 @@ function loadPage(url, data, right) {
             notifications.getNotifications();
         }
     } else {
+        if (questions.isSet) {
+            questions.finalize();
+        }
         setTitle();
         if ($("#message").text()) {
             message.showReadyMessage(3000);
@@ -108,10 +111,8 @@ function loadPage(url, data, right) {
         } else if (chat.chatId) {
             chat.finalize();
         }
-        if (url == "/" || url.match("^/index")) {
+        if (url == "/" || url.match(/^\/\?/) || url.match(/^\/index/)) {
             questions.setUp();
-        } else if (questions.isSet) {
-            questions.finalize();
         }
     }
 }
@@ -136,9 +137,9 @@ function updateLinks() {
         }
     });
 }
-function goToPage(url) {
+function goToPage(url, force) {
     var currentUrl = location.pathname + location.search;
-    if (url != currentUrl) {
+    if (url != currentUrl || force) {
         if (url != "/login") {
             history.pushState(null, null, url); //update address bar
         }
@@ -178,6 +179,8 @@ var questions = {
     earliestIds: [], // we need to keep them to avoid reloading already loaded questions
     subscription: undefined,
     isSet: false,
+    searchQuery: undefined,
+    tags: [],
     setUp: function () {
         questions.subscribe();
         questions.loadQuestions(questions.earliestTime);
@@ -187,6 +190,11 @@ var questions = {
             }
         });
         questions.isSet = true;
+        var s = $("#search_main_input");
+        var html = s.val();
+        s.focus().val("").val(html);
+        this.showHideSearchTable();
+        this.showTags();
     },
     subscribe: function () {
         if (stompConnected) {
@@ -212,10 +220,14 @@ var questions = {
         }
     },
     loadQuestions: function (time) {
+        var data = {};
+        data.exclude = questions.earliestIds;
+        data.searchQuery = this.searchQuery;
+        data.tags = this.tags;
         $.ajax({
             type: "GET",
             url: "/loadQuestions/" + time,
-            data: {exclude: questions.earliestIds},
+            data: data,
             success: function (response) {
                 questions.addQuestions(response);
                 questions.showQuestions();
@@ -262,7 +274,7 @@ var questions = {
             html[i++] = "<a href='/question?id=" + q.id + "'>" + q.title + "</a>";
             html[i++] = "</td></tr><tr><td class='tags'>";
             $.each(q.tags, function () {
-                html[i++] = "<span>" + this.name + "</span> "; // space is important!
+                html[i++] = "<span onclick=\"questions.addTag('" + this.name + "')\">" + this.name + "</span> "; // space is important!
             });
             html[i++] = "</td><td class='time'>" + utils.formatDate(date) + "</td>";
             html[i++] = "</tr></table>";
@@ -303,9 +315,9 @@ var questions = {
             return b.updatedTime - a.updatedTime;
         });
     },
-    refresh: function() {
+    refresh: function () {
         $("#questions").remove();
-        $("#questions_top").after("<div id='questions'></div>");
+        $("#questions_search_table").after("<div id='questions'></div>");
         $("#refresh_count").val(0);
         $("#refresh_button").hide();
         questions.loaded = [];
@@ -313,6 +325,46 @@ var questions = {
         questions.earliestTime = new Date().getTime() + 86400000;
         questions.earliestIds = [];
         questions.loadMore();
+        questions.showHideSearchTable();
+    },
+    search: function (query) {
+        if (query != "") {
+            this.searchQuery = query;
+            questions.refresh();
+            //goToPage("/?searchQuery=" + query);
+        } else if (this.searchQuery) {
+            this.searchQuery = undefined;
+            questions.refresh();
+            //goToPage("/");
+        }
+    },
+    addTag: function (value) {
+        goToPage("/");
+        questions.showHideSearchTable();
+        if (questions.tags.indexOf(value) == -1) {
+            questions.tags.push(value);
+            $("#questions_search_table").find(".tags").append(" <span onclick=\"questions.removeTag('" + value + "')\">" + value + "</span>")
+        }
+        questions.refresh();
+    },
+    removeTag: function (value) {
+        var index = questions.tags.indexOf(value);
+        questions.tags.splice(index, 1);
+        $("#questions_search_table").find(".tags span:contains('" + value + "')").remove();
+        questions.showHideSearchTable();
+        questions.refresh();
+    },
+    showTags: function () {
+        $.each(this.tags, function () {
+            questions.addTag(this);
+        });
+    },
+    showHideSearchTable: function () {
+        if (this.searchQuery || this.tags.length > 0) {
+            $("#questions_search_table").show();
+        } else {
+            $("#questions_search_table").hide();
+        }
     }
 };
 var chat = {
@@ -776,7 +828,11 @@ var utils = {
             if (mm < 10) {
                 mm = "0" + mm;
             }
-            return dd + "." + mm;
+            var yy = date.getFullYear() - 2000;
+            if (yy < 10) {
+                yy = "0" + yy;
+            }
+            return dd + "." + mm + "." + yy;
         }
     },
     getGuestsWord: function (count) {
@@ -1039,7 +1095,7 @@ var cp = {
             type: "POST",
             url: "/vk_detach",
             success: function (result) {
-                goToPage("/cp");
+                goToPage("/cp", true);
             }
         });
     },

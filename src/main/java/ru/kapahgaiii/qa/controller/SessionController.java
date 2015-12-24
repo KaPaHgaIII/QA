@@ -43,7 +43,6 @@ public class SessionController implements ApplicationListener<ApplicationEvent> 
     @Autowired
     UserService userService;
 
-    @Override
     public void onApplicationEvent(ApplicationEvent applicationEvent) {
 
         if (applicationEvent.getClass() == SessionConnectEvent.class) {

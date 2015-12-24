@@ -72,10 +72,12 @@ public class AjaxController {
     }
 
     @RequestMapping({"/", "/index"})
-    public String index(HttpServletRequest request, Model model, Principal principal) {
+    public String index(HttpServletRequest request, Model model, Principal principal,
+                        @RequestParam(required = false) String searchQuery) {
         if (!isAjax(request)) {
             return template(model, principal);
         }
+        model.addAttribute("searchQuery", searchQuery);
         return "index :: content";
     }
 
@@ -484,8 +486,10 @@ public class AjaxController {
     public
     @ResponseBody
     QuestionDTO[] getQuestions(@PathVariable(value = "time") Long time,
-                               @RequestParam(value = "exclude[]", required = false) Integer[] exclude) {
-        List<QuestionDTO> questions = chatService.getQuestionDTOsList(new Timestamp(time), exclude);
+                               @RequestParam(value = "exclude[]", required = false) Integer[] exclude,
+                               @RequestParam(value = "searchQuery", required = false) String searchQuery,
+                               @RequestParam(value = "tags[]", required = false) String[] tags) {
+        List<QuestionDTO> questions = chatService.getQuestionDTOsList(new Timestamp(time), exclude, searchQuery, tags);
         return questions.toArray(new QuestionDTO[questions.size()]);
     }
 

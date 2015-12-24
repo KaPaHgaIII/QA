@@ -77,7 +77,7 @@
             </tr>
             <tr>
                 <td id="question_tags">
-                    <span th:each="tag : ${question.getTags()}" th:text="${tag.getName()}">теги</span>
+                    <span th:each="tag : ${question.getTags()}" th:text="${tag.getName()}" onclick="questions.addTag(this.innerHTML)">теги</span>
                 </td>
                 <td id="question_author" th:text="${question.getUsername()}">Автор</td>
             </tr>

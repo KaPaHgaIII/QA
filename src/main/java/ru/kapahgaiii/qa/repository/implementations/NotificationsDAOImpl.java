@@ -19,7 +19,6 @@ public class NotificationsDAOImpl implements NotificationsDAO {
     @Autowired
     private SessionFactory sessionFactory;
     
-    @Override
     @SuppressWarnings("unchecked")
     public List<Notification> getNotifications(User user) {
         List<Object[]> list = sessionFactory.getCurrentSession()
