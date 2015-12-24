@@ -329,6 +329,7 @@ var questions = {
     },
     search: function (query) {
         if (query != "") {
+            $("#search_main_input").val(query);
             this.searchQuery = query;
             questions.refresh();
             //goToPage("/?searchQuery=" + query);
