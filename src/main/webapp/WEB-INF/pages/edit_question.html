@@ -37,7 +37,7 @@
             </tr>
             <tr>
                 <td colspan="2" class="textarea">
-                    <textarea id="text" maxlength="4000" th:utext="${question.getText()}"></textarea>
+                    <textarea id="text" maxlength="4000" th:utext="${question.getText()}" class="materialize-textarea"></textarea>
                 </td>
             </tr>
             <tr>
@@ -50,7 +50,7 @@
                 <td colspan="2">
                     <a href="question.html" th:href="@{/question(id=${question.getId()})}"
                        id="edit_cancel">Отменить редактирование</a>
-                    <input type="button" value="Сохранить изменения" onclick="editQuestion.save()">
+                    <input type="button" value="Сохранить изменения" onclick="editQuestion.save()" class="waves-effect waves-light btn">
                 </td>
             </tr>
         </table>

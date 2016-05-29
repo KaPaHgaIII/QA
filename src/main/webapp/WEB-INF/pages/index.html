@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:th="http://www.thymeleaf.org"
-        >
+>
 <head>
     <title>Вопрос-Ответ 2.0</title>
     <meta charset="UTF-8">
@@ -19,7 +19,7 @@
         <script type="text/javascript" th:inline="javascript">
             questions.searchQuery = /*[[${searchQuery}]]*/ undefined;
         </script>
-        <table id="questions_top">
+        <!--<table id="questions_top">
             <tr>
                 <td><h3>Вопросы:</h3></td>
                 <td id="refresh">
@@ -28,23 +28,28 @@
                            style="display: none">
                 </td>
             </tr>
-        </table>
+        </table>-->
+
+        <h2 class="header">Вопросы</h2>
 
         <table id="questions_search_table" style="display: none;">
             <tr>
                 <td>
-                    Поиск:
-                    <input type="text" id="search_main_input" th:value="${searchQuery}"
+                    <input placeholder="Поиск" type="text" id="search_main_input" th:value="${searchQuery}"
                            onkeydown="if(event.keyCode == 13){questions.search(this.value)}">
-                    <input type="button" value="Найти"
-                           onclick="questions.search(document.getElementById('search_main_input').value)">
+                </td>
+                <td width="1%">
+                    <a class="waves-effect waves-light btn"
+                       onclick="questions.search(document.getElementById('search_main_input').value)">Найти</a>
                 </td>
             </tr>
             <td class="tags"></td>
         </table>
 
 
-        <div id="questions" th:remove="body">
+        <ul id="questions" class="collection"></ul>
+
+        <!--<div id="questions" th:remove="body">
             <table class="item" th:each="q : ${questions}">
                 <tr>
                     <td class="votes" rowspan="2">
@@ -74,7 +79,7 @@
                     <td class="time">18:43:47</td>
                 </tr>
             </table>
-        </div>
+        </div>-->
     </div>
 </div>
 

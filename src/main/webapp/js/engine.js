@@ -58,9 +58,6 @@ $(document).ready(function () {
         }, false);
     }, 1);
 
-    //subscribe for notifications
-    //if not logged in - only for refresh button on index page
-    notifications.subscribe();
 });
 function getPage(url, right) {
     if (!right) {
@@ -86,17 +83,12 @@ function loadPage(url, data, right) {
     inner.remove(); //remove old content, bound events and jquery data
     container.html(data);
     updateLinks();
-    tags.updateInputs();
 
     if (right) {
         if (loggedIn) {
             $("#logout_button").click(function () {
                 $("#logout_form").submit();
             });
-            $("#notifications_container").perfectScrollbar({
-                includePadding: true
-            });
-            notifications.getNotifications();
         }
     } else {
         if (questions.isSet) {
@@ -261,7 +253,18 @@ var questions = {
             var date = new Date(q.updatedTime);
             var html = [];
             var i = 0;
-            html[i++] = "<table class='item' question-id='" + q.id + "'><tr><td class='votes' rowspan='2'>";
+
+            html[i++] = "<li class='collection-item'>"
+            html[i++] = "<span class='title'>"+q.title+"</span>"
+            html[i++] = "<a href='/question?id=" + q.id + "' class='secondary-content'><i class='material-icons'>send</i></a>";
+            html[i++] = "<div class='tags'>";
+            $.each(q.tags, function () {
+                html[i++] = "<div class='chip' onclick=\"questions.addTag('" + this.name + "')\">" + this.name + "</div> "; // space is important!
+            });
+            html[i++] = "</div>";
+            html[i++] = "</li>";
+            
+            /*html[i++] = "<table class='item' question-id='" + q.id + "'><tr><td class='votes' rowspan='2'>";
             html[i++] = "<div class='number'>" + q.votes + "</div>";
             html[i++] = "<div class='sign'>" + utils.getVotesWord(q.votes) + "</div>";
             html[i++] = "</td><td class='messages' rowspan='2'>";
@@ -274,10 +277,10 @@ var questions = {
             html[i++] = "<a href='/question?id=" + q.id + "'>" + q.title + "</a>";
             html[i++] = "</td></tr><tr><td class='tags'>";
             $.each(q.tags, function () {
-                html[i++] = "<span onclick=\"questions.addTag('" + this.name + "')\">" + this.name + "</span> "; // space is important!
+                html[i++] = "<div class='chip' onclick=\"questions.addTag('" + this.name + "')\">" + this.name + "</div> "; // space is important!
             });
             html[i++] = "</td><td class='time'>" + utils.formatDate(date) + "</td>";
-            html[i++] = "</tr></table>";
+            html[i++] = "</tr></table>";*/
 
             $("#questions").append(html.join(""));
         }
@@ -317,7 +320,7 @@ var questions = {
     },
     refresh: function () {
         $("#questions").remove();
-        $("#questions_search_table").after("<div id='questions'></div>");
+        $("#questions_search_table").after("<ul id='questions' class='collection'></ul>");
         $("#refresh_count").val(0);
         $("#refresh_button").hide();
         questions.loaded = [];
@@ -344,14 +347,14 @@ var questions = {
         questions.showHideSearchTable();
         if (questions.tags.indexOf(value) == -1) {
             questions.tags.push(value);
-            $("#questions_search_table").find(".tags").append(" <span onclick=\"questions.removeTag('" + value + "')\">" + value + "</span>")
+            $("#questions_search_table").find(".tags").append(" <div class='chip' onclick=\"questions.removeTag('" + value + "')\">" + value + "</div>")
         }
         questions.refresh();
     },
     removeTag: function (value) {
         var index = questions.tags.indexOf(value);
         questions.tags.splice(index, 1);
-        $("#questions_search_table").find(".tags span:contains('" + value + "')").remove();
+        $("#questions_search_table").find(".tags div:contains('" + value + "')").remove();
         questions.showHideSearchTable();
         questions.refresh();
     },
@@ -591,18 +594,7 @@ var chat = {
             var i = 0;
             html[i++] = "<table class='message' number='";
             html[i++] = m.number;
-            html[i++] = "'><tr><td class='votes'><span class='vote_up";
-            if (!myUsername || myUsername == m.username) {
-                html[i++] = " disabled";
-            }
-            if (chat.votes[chat.chatId] && chat.votes[chat.chatId][m.number]) {
-                html[i++] = " voted";
-            }
-            html[i++] = "'></span><span class='votes_count'>";
-            if (m.votes > 0) {
-                html[i++] = m.votes;
-            }
-            html[i++] = "</span></td><td class='name_text'><span class='username' username='";
+            html[i++] = "'><tr><td class='name_text'><span class='username' username='";
             html[i++] = m.username;
             html[i++] = "'>";
             html[i++] = m.username;
@@ -1111,7 +1103,7 @@ var cp = {
             },
             success: function (result) {
                 if (result == "success") {
-                    goToPage("/cp");
+                    location.reload();
                 } else {
                     restr.css("color", "red");
                     restr.text("Ошибка");
@@ -1179,133 +1171,6 @@ var message = {
         }
     }
 };
-var tags = {
-    selected: -1,
-    count: 0,
-    timer: undefined,
-    $input: undefined,
-    navigationCodes: [38, 40, 13],
-    updateInputs: function () {
-        tags.$input = $(".tag_input");
-        var input = tags.$input[0];
-        if (!input) {
-            return;
-        }
-        if (!$(".tag_ul")[0]) {
-            $(input).after("<div class='tag_ul'></div>")
-            $(".tag_ul").css("width", tags.$input.outerWidth() + "px");
-        }
-        if (!($._data(input, "events") && $._data(input, "events")['keyup'])) {
-            tags.preventUpDown.prevent(input);
-            $(input).keyup(function (event) {
-                if (tags.navigationCodes.indexOf(event.keyCode) != -1) {
-                    return;
-                }
-                tags.hide();
-                clearTimeout(tags.timer);
-                tags.timer = setTimeout(function () {
-                    tags.load(input);
-                }, 500); // increase delay if server overloaded
-            });
-            $(input).keydown(function (event) {
-                if (tags.navigationCodes.indexOf(event.keyCode) != -1) {
-                    tags.navigate(event);
-                }
-            });
-        }
-    },
-    getArray: function () {
-        var array = tags.$input.val().split(",");
-        for (var i = 0; i < array.length; i++) {
-            array[i] = array[i].trim();
-        }
-        return array;
-    },
-    load: function (input) {
-        var array = input.value.split(",");
-        var s = array[array.length - 1].trim();
-        if (!s) {
-            return;
-        }
-        $.ajax({
-            type: "POST",
-            url: "/get_tags",
-            data: {s: s},
-            success: function (result) {
-                tags.show(result);
-            }
-        });
-    },
-    show: function (list) {
-        var ul = $(".tag_ul");
-        var array = tags.getArray();
-        $.each(list, function () {
-            var name = this.name;
-            var usage = this.usage;
-            if (array.indexOf(name) == -1) {
-                var li = $("<div class='tag_li' name='" + name + "'><span class='usage'>" + usage + "</span>" + name + "</div>");
-                ul.append(li);
-                li.click(function () {
-                    tags.select(li);
-                });
-            }
-        });
-        tags.count = list.length;
-    },
-    hide: function () {
-        $(".tag_li").remove();
-        tags.selected = -1;
-        tags.count = 0;
-    },
-    navigate: function (event) {
-        if (event.keyCode != 13) {
-            $(".tag_li").removeClass("selected");
-            if (event.keyCode == 38) { // up
-                tags.selected = Math.max(-1, tags.selected - 1);
-            } else { // down
-                tags.selected = Math.min(tags.count - 1, tags.selected + 1);
-            }
-            if (tags.selected != -1) {
-                $(".tag_li:nth(" + tags.selected + ")").addClass("selected");
-            }
-        } else {
-            tags.select($(".tag_li:nth(" + tags.selected + ")"));
-        }
-    },
-    select: function (li) {
-        var array = tags.getArray();
-        array[array.length - 1] = $(li).attr("name").trim();
-        tags.$input.val(array.join(", ") + ", ");
-        tags.hide();
-        tags.$input.blur(); // in order to scroll to the end
-        tags.$input.focus();
-    },
-    preventUpDown: {
-        prevent: function (input) {
-            input.addEventListener('keydown', tags.preventUpDown.handler, false);
-            input.addEventListener('keypress', tags.preventUpDown.handler, false);
-        },
-        ignoreKey: false,
-        handler: function (e) {
-            if (tags.preventUpDown.ignoreKey) {
-                e.preventDefault();
-                return;
-            }
-            if (e.keyCode == 38 || e.keyCode == 40) {
-                var pos = this.selectionStart;
-                this.selectionStart = pos;
-                this.selectionEnd = pos;
-
-                tags.preventUpDown.ignoreKey = true;
-                setTimeout(function () {
-                    tags.preventUpDown.ignoreKey = false
-                }, 1);
-                e.preventDefault();
-            }
-
-        }
-    }
-};
 var newQuestion = {
     ask: function () {
         $.ajax({
@@ -1356,107 +1221,5 @@ var editQuestion = {
 
             }
         });
-    }
-};
-var notifications = {
-    basicSubscription: undefined,
-    userSubscription: undefined,
-    subscribe: function () {
-        if (stompConnected) {
-            notifications.basicSubscription = stompClient.subscribe("/notifications", function (message) {
-                notifications.receiveNotification(message);
-            });
-            if (loggedIn) {
-                notifications.userSubscription = stompClient.subscribe("/user/" + myUsername + "/notifications",
-                    function (message) {
-                        notifications.receiveNotification(message);
-                    });
-            }
-        } else { // Please, try again later
-            setTimeout(function () {
-                notifications.subscribe();
-            }, 300);
-        }
-    },
-    receiveNotification: function (message) {
-        var n = JSON.parse(message.body);
-        if (n.type == "new_question") {
-            if (utils.isIntersection(n.names, interestingTags)) {
-                notifications.showNotification(n);
-            }
-        } else if (n.type == "new_message") {
-            if (favouriteQuestions.indexOf(parseInt(n.param)) != -1) {
-                notifications.showNotification(n);
-            }
-        } else if (n.type == "addressed_message") {
-            notifications.showNotification(n);
-        }
-
-        if ((window.location.pathname == "/" || window.location.pathname == "/index") &&
-            (n.type == "new_question" || n.type == "new_message")) {
-            var count_holder = $("#refresh_count");
-            var count = parseInt(count_holder.val());
-            var button = $("#refresh_button");
-            button.val("Обновить список (" + ++count + ")");
-            button.show();
-            count_holder.val(count);
-        }
-
-        updateLinks();
-    },
-    unsubscribe: function () {
-        if (notifications.basicSubscription) {
-            notifications.basicSubscription.unsubscribe();
-        }
-        if (notifications.userSubscription) {
-            notifications.userSubscription.unsubscribe();
-        }
-    },
-    getNotifications: function () {
-        $.ajax({
-            type: "POST",
-            url: "/get_notifications",
-            success: function (result) {
-                notifications.showNotifications(result);
-            }
-        });
-    },
-    showNotifications: function (list) {
-        $.each(list, function () {
-            notifications.showNotification(this);
-        });
-        updateLinks();
-    },
-    showNotification: function (n) {
-        var notificationsDOM = $("#notifications");
-
-        notificationsDOM.find(".notification[type='" + n.type + "'][param='" + n.param + "']").remove();
-
-        var i = 0;
-        var html = [];
-        html[i++] = "<table class='notification' type='";
-        html[i++] = n.type;
-        html[i++] = "' param='";
-        html[i++] = n.param;
-        html[i++] = "'><tr><td rowspan='2' class='icon ";
-        html[i++] = n.type;
-        html[i++] = "'><div></div></td><td class='time'>";
-        html[i++] = utils.formatDate(new Date(n.time));
-        html[i++] = "</td></tr><tr><td class='text'><a href='/";
-
-        var questionTypes = ["new_question", "new_message", "addressed_message"];
-        var url = "";
-        if (questionTypes.indexOf(n.type) != -1) {
-            url = "question?id=" + n.param;
-        }
-
-        html[i++] = url;
-        html[i++] = "'>";
-        html[i++] = n.text;
-        html[i++] = "</a></td></tr></table>";
-
-        notificationsDOM.append(html.join(""));
-
-        $("#notifications_container").scrollTop(notificationsDOM.height() + 9999999);
     }
 };

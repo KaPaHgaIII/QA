@@ -22,147 +22,28 @@
 <div id="page_body">
     <div id="right_block_container">
         <div id="right_block" th:fragment="right_block">
-            <a href="new_question.html" th:href="@{/new_question}"><input type="button" value="Задать вопрос" id="new_question"></a>
-            <div id="login_info">
-                <span sec:authentication="name" id="username">Логин</span>
-                |
-                <span id="logout_button" class="link">Выход</span>
+
+            <div class="row s12" style="margin-left: 30px;">
+                <h3 class="header" sec:authentication="name">Логин</h3>
+            </div>
+
+            <div class="row s12" style="margin-left: 30px;">
+                    <a class="waves-effect waves-light btn" href="new_question.html" th:href="@{/new_question}">Задать
+                        вопрос</a>
+            </div>
+
+            <div class="row">
+                <a href="cp.html" th:href="@{/cp}" class="waves-effect waves-teal btn-flat">Перейти в личный кабинет</a>
             </div>
 
             <form th:action="@{/logout}" method="post" sec:authorize="isAuthenticated()" id="logout_form">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
             </form>
 
-            <div id="go_to_cp">
-                <a href="cp.html" th:href="@{/cp}">Перейти в личный кабинет</a>
+            <div class="row">
+                <span id="logout_button" class="waves-effect waves-teal btn-flat">Выход</span>
             </div>
 
-            <div id="notifications_wr">
-                <div id="notifications_title">Уведомления:</div>
-                <div id="notifications_container">
-                    <div id="notifications" th:remove="body">
-                        <table class="notification">
-                            <tr>
-                                <td rowspan="2" class="icon new_question">
-                                    <div></div>
-                                </td>
-                                <td class="time">14:07:23</td>
-                            </tr>
-                            <tr>
-                                <td class="text"><a href="question.html">Тут заголовок вопроса, в котором произошло
-                                    событие</a></td>
-                            </tr>
-                        </table>
-                        <table class="notification">
-                            <tr>
-                                <td rowspan="2" class="icon new_message">
-                                    <div></div>
-                                </td>
-                                <td class="time">14:07:23</td>
-                            </tr>
-                            <tr>
-                                <td class="text"><a href="question.html">Убийство Немцова в глазах западных СМИ</a></td>
-                            </tr>
-                        </table>
-                        <table class="notification">
-                            <tr>
-                                <td rowspan="2" class="icon new_question">
-                                    <div></div>
-                                </td>
-                                <td class="time">14:07:23</td>
-                            </tr>
-                            <tr>
-                                <td class="text"><a href="question.html">Порошенко: кто-то боялся доклада Немцова о
-                                    Донбассе</a></td>
-                            </tr>
-                        </table>
-                        <table class="notification">
-                            <tr>
-                                <td rowspan="2" class="icon new_message">
-                                    <div></div>
-                                </td>
-                                <td class="time">14:07:23</td>
-                            </tr>
-                            <tr>
-                                <td class="text"><a href="question.html">Украинская модель стала свидетельницей убийства
-                                    Немцова</a></td>
-                            </tr>
-                        </table>
-                        <table class="notification">
-                            <tr>
-                                <td rowspan="2" class="icon new_question">
-                                    <div></div>
-                                </td>
-                                <td class="time">14:07:23</td>
-                            </tr>
-                            <tr>
-                                <td class="text"><a href="question.html">В РВСН заявили о готовности отразить ядерный
-                                    удар</a></td>
-                            </tr>
-                        </table>
-                        <table class="notification">
-                            <tr>
-                                <td rowspan="2" class="icon new_message">
-                                    <div></div>
-                                </td>
-                                <td class="time">14:07:23</td>
-                            </tr>
-                            <tr>
-                                <td class="text"><a href="question.html">ДНР объявила о завершении отвода тяжелой
-                                    артиллерии</a></td>
-                            </tr>
-                        </table>
-                        <table class="notification">
-                            <tr>
-                                <td rowspan="2" class="icon addressed_message">
-                                    <div></div>
-                                </td>
-                                <td class="time">14:07:23</td>
-                            </tr>
-                            <tr>
-                                <td class="text"><a href="question.html">ЦБ считает радикальным прогноз Moody’s по
-                                    инфляции в России</a></td>
-                            </tr>
-                        </table>
-                        <table class="notification">
-                            <tr>
-                                <td rowspan="2" class="icon addressed_message">
-                                    <div></div>
-                                </td>
-                                <td class="time">14:07:23</td>
-                            </tr>
-                            <tr>
-                                <td class="text"><a href="question.html">Дзюба всех затмил. Самые громкие трансферы
-                                    РФПЛ</a></td>
-                            </tr>
-                        </table>
-                        <table class="notification">
-                            <tr>
-                                <td rowspan="2" class="icon addressed_message">
-                                    <div></div>
-                                </td>
-                                <td class="time">14:07:23</td>
-                            </tr>
-                            <tr>
-                                <td class="text"><a href="question.html">Тест-драйв Great Wall H3 New: жить можно</a>
-                                </td>
-                            </tr>
-                        </table>
-                        <table class="notification">
-                            <tr>
-                                <td rowspan="2" class="icon new_question">
-                                    <div></div>
-                                </td>
-                                <td class="time">14:07:23</td>
-                            </tr>
-                            <tr>
-                                <td class="text"><a href="question.html">Утечка: внешний вид новейшего флагмана
-                                    Samsung</a></td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>

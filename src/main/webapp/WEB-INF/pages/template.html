@@ -7,6 +7,9 @@
     <meta charset="UTF-8">
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <link href='https://fonts.googleapis.com/css?family=Roboto:400,700&subset=latin,cyrillic-ext' rel='stylesheet' type='text/css'>
+    <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link type="text/css" rel="stylesheet" href="css/materialize.min.css"  media="screen,projection"/>
     <link rel="stylesheet" href="../../css/main.css" th:href="@{/css/main.css}">
     <link rel="stylesheet" href="../../css/perfect-scrollbar.min.css" th:href="@{/css/perfect-scrollbar.min.css}">
 
@@ -23,6 +26,8 @@
         var interestingTags = [];
         var favouriteQuestions = [];
     </script>
+</head>
+<body>
     <script type="text/javascript" src="http://vk.com/js/api/openapi.js?116"></script>
     <script type="text/javascript" src="../../js/jquery-2.1.3.min.js" th:src="@{/js/jquery-2.1.3.min.js}"></script>
     <script type="text/javascript" src="../../js/sockjs-0.3.4.js" th:src="@{/js/sockjs-0.3.4.js}"></script>
@@ -30,19 +35,18 @@
     <script type="text/javascript" src="../../js/perfect-scrollbar.min.js"
             th:src="@{/js/perfect-scrollbar.min.js}"></script>
     <script type="text/javascript" src="../../js/engine.js" th:src="@{/js/engine.js}"></script>
-</head>
-<body>
+    <script type="text/javascript" src="js/materialize.min.js"></script>
 
 <div id="header_wr">
     <table id="header">
         <tr>
-            <td style="width: 100px">
-                <a href="index.html" th:href="@{/}">На главную</a>
+            <td>
+                <a href="index.html" th:href="@{/}" class="waves-effect waves-light btn">На главную</a>
             </td>
             <td id="online">
 
             </td>
-            <td style="width: 99%"></td>
+            <td style="width: 40%"></td>
             <td>
                 <input type="text" placeholder="Поиск по вопросам" onkeydown="if(event.keyCode == 13){questions.search(this.value)}">
             </td>

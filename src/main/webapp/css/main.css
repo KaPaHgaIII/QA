@@ -16,15 +16,15 @@ html, body {
 }
 
 body {
-    background-color: #FFFFFF;
+    background-color: #E1F5FE;
     min-width: 1000px;
-    font-family: Arial, sans-serif;
+    /*font-family: 'Roboto', sans-serif;*/
     overflow-y: auto;
 }
 
 a {
-    color: inherit;
-    text-decoration: none;
+    /*color: inherit;*/
+    /*text-decoration: none;*/
 }
 
 textarea {
@@ -38,8 +38,8 @@ a:hover, .link:hover {
 
 h3 {
     font-size: 18px;
-    font-family: Verdana, Arial, Helvetica, sans-serif;
-    font-weight: bold;
+    /*font-family: 'Roboto', sans-serif;*/
+    font-weight: 700;
 }
 
 h4 {
@@ -49,22 +49,24 @@ h4 {
 }
 
 input[type='text'], input[type='password'], textarea {
-    border: 1px solid #777777;
-    padding: 2px 5px;
+    /*border: 1px solid #777777;*/
+    /*padding: 2px 5px;*/
 }
 
+/*
 input[type='button'], input[type='submit'] {
-    background-color: #6474a5;
+    background-color: #01579B;
     color: #EEEEEE;
     border-radius: 1px;
     box-shadow: 1px 1px 1px 1px #777777;
     min-width: 80px;
     font-size: 14px;
     line-height: 20px;
-    font-family: Arial, Helvetica, sans-serif;
+    !*font-family: 'Roboto', sans-serif;*!
     height: 20px;
     padding: 0 3px;
 }
+*/
 
 input[type='button']:hover, input[type='submit']:hover {
     box-shadow: 1px 1px 1px 1px #333333;
@@ -148,7 +150,8 @@ input[type='button']:disabled, input[type='submit']:disabled {
 
 #header_wr {
     width: 100%;
-    background-color: #DDDDDD;
+    background-color: #01579B;
+    color: #FFFFFF;
     z-index: 10;
     opacity: 1;
 }
@@ -209,7 +212,7 @@ input[type='button']:disabled, input[type='submit']:disabled {
 #right_block_container {
     width: 330px;
     float: right;
-    background-color: #EEEEEE;
+    background-color: #B3E5FC;
     margin-top: 0;
 }
 
@@ -303,15 +306,15 @@ input[type='button']:disabled, input[type='submit']:disabled {
     color: #130e5a;
 }
 
-.tags span, #question_tags span {
-    list-style: none;
-    margin: 2px 0;
-    background-color: #DFE9F0;
-    color: #2A5594;
-    display: inline-block;
-    padding: 2px 4px;
-    white-space: nowrap;
-    font-size: 13px;
+.tags div, #question_tags div {
+    /*list-style: none;*/
+    /*margin: 2px 0;*/
+    background-color: #2bbbad;
+    /*color: #2A5594;*/
+    /*display: inline-block;*/
+    /*padding: 2px 4px;*/
+    /*white-space: nowrap;*/
+    /*font-size: 13px;*/
     cursor: pointer;
 }
 
@@ -359,7 +362,7 @@ input[type='button']:disabled, input[type='submit']:disabled {
     color: #130e5a;
     font-weight: bold;
     font-size: 20px;
-    font-family: Verdana, Arial, Helvetica, sans-serif;
+    /*font-family: 'Roboto', sans-serif;*/
     padding-bottom: 10px;
 }
 
@@ -457,15 +460,13 @@ input[type='button']:disabled, input[type='submit']:disabled {
 
 #chat_wr #chat_container {
     position: relative;
-    height: 400px;
+    height: 300px;
     width: 625px;
     overflow-y: hidden;
-    border-top: 1px solid #AAAAAA;
-    padding-top: 5px;
 }
 
 #chat_wr #chat_container #chat {
-    height: 390px;
+    height: 290px;
     width: 600px;
     padding: 5px;
     display: table-cell;
@@ -478,10 +479,10 @@ input[type='button']:disabled, input[type='submit']:disabled {
 }
 
 #chat_wr #send_message_button {
-    vertical-align: top;
-    position: relative;
-    top: 10px;
-    width: 80px;
+    /*vertical-align: top;*/
+    /*position: relative;*/
+    /*top: 10px;*/
+    /*width: 80px;*/
 }
 
 #chat_wr #reply {
@@ -509,6 +510,10 @@ input[type='button']:disabled, input[type='submit']:disabled {
     width: 100%;
     font-size: 13px;
     margin-top: 3px;
+}
+
+#chat_wr #chat .message td{
+    padding: 0;
 }
 
 #chat_wr #chat .message .votes {
@@ -584,7 +589,7 @@ input[type='button']:disabled, input[type='submit']:disabled {
 
 #login_title {
     font-size: 15px;
-    font-family: Verdana, Arial, Helvetica, sans-serif;
+    /*font-family: 'Roboto', sans-serif;*/
     font-weight: bold;
     padding-bottom: 7px;
 }
@@ -604,13 +609,13 @@ input[type='button']:disabled, input[type='submit']:disabled {
 #login_register {
     font-weight: normal;
     float: right;
-    font-family: Arial, Helvetica, sans-serif;
+    /*font-family: 'Roboto', sans-serif;*/
 }
 
 #lost_password {
     font-weight: normal;
     margin-right: 60px;
-    font-family: Verdana, Arial, Helvetica, sans-serif;
+    /*font-family: 'Roboto', sans-serif;*/
 }
 
 #lost_password_table {

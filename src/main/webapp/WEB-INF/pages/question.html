@@ -43,7 +43,26 @@
         <input type="hidden" th:value="${question.getUsername()}" value="author" id="author">
         <!--<a href="index.html" th:href="@{/}" id="question_back">Назад к списку вопросов</a>-->
 
-        <table id="question_info">
+
+        <div>
+            <div class="col s12 m6">
+                <div class="card blue-grey darken-1">
+                    <div class="card-content white-text">
+                        <span class="card-title" th:text="${question.getTitle()}">Card Title</span>
+                        <p th:utext="${question.getText()}">I am a very simple card. I am good at containing small bits
+                            of information.
+                            I am convenient because I require little markup to use effectively.</p>
+                    </div>
+                    <div class="card-action">
+                        <a th:text="${'@' + question.getUsername()}"></a>
+                        <a href="edit_question.html" th:href="@{/edit_question(id=${question.getId()})}"
+                           th:remove="${#authentication.name !=null && question.getUsername().equals(#authentication.name)}? none : all">Редактировать</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--<table id="question_info">
             <tr>
                 <td colspan="2" id="question_title">
                     <span th:text="${question.getTitle()}">Какой здесь будет заголовок?</span>
@@ -84,7 +103,7 @@
             <tr>
                 <td colspan="3" id="users_in_chat">В обсуждении <span class="anon_users"></span></td>
             </tr>
-        </table>
+        </table>-->
         <div>
 
         </div>
@@ -239,7 +258,8 @@
             </span>
             <input type="text" placeholder="Чтобы отправлять сообщения необходимо авторизироваться" id="message_input"
                    disabled>
-            <input type="button" value="Отправить" id="send_message_button" disabled>
+            <input type="button" value="Отправить" id="send_message_button" disabled
+                   class="waves-effect waves-light btn col">
         </div>
     </div>
 </div>

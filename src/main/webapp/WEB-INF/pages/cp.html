@@ -30,13 +30,13 @@
         <table id="change_email_table" class="form_table">
             <tr>
                 <td class="label">Новый email</td>
-                <td class="input"><input type="text" id="email" th:value="${user.getEmail()}"
+                <td class="input" style="width: 250px;"><input type="text" id="email" th:value="${user.getEmail()}"
                                          onkeydown="if(event.keyCode == 13){cp.changeEmail()}"></td>
                 <td class="restrictions email">Пригодится, если забудете пароль.</td>
             </tr>
             <tr>
                 <td colspan="3">
-                    <input type="button" value="Сохранить" onclick="cp.changeEmail()">
+                    <input type="button" value="Сохранить" onclick="cp.changeEmail()" class="waves-effect waves-light btn">
                 </td>
             </tr>
         </table>
@@ -58,7 +58,7 @@
             </tr>
             <tr>
                 <td colspan="3">
-                    <input type="button" value="Сохранить" onclick="cp.changePassword()">
+                    <input type="button" value="Сохранить" onclick="cp.changePassword()" class="waves-effect waves-light btn">
                 </td>
             </tr>
         </table>
@@ -89,7 +89,7 @@
             <table class="form_table">
                 <tr>
                     <td>
-                        <input type="button" value="Отвязать" onclick="cp.vkDetach()">
+                        <input type="button" value="Отвязать" onclick="cp.vkDetach()" class="waves-effect waves-light btn">
                     </td>
                 </tr>
             </table>
@@ -112,7 +112,7 @@
             </tr>
             <tr>
                 <td colspan="2">
-                    <input type="button" value="Добавить" onclick="cp.addInterestingTags()">
+                    <input type="button" value="Добавить" onclick="cp.addInterestingTags()" class="waves-effect waves-light btn">
                 </td>
             </tr>
         </table>
